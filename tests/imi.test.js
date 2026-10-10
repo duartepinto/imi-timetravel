@@ -107,6 +107,19 @@ test('extrapolated dwellings are flagged as estimates', () => {
     assert.ok(flagged.every(y => lisboa.years[y].dwellings.estimate === true));
 });
 
+test('dwelling counts have no one-year spikes', () => {
+    // The housing stock moves slowly (largest real change about 4% in a year).
+    // INE's raw 2020 value jumped up to 14% and back; build_revenue.py smooths it.
+    for (const m of Object.values(municipal.municipalities)) {
+        for (const [y, row] of Object.entries(m.years)) {
+            const prev = m.years[Number(y) - 1];
+            if (!prev) continue;
+            const change = app.countValue(row.dwellings) / app.countValue(prev.dwellings) - 1;
+            assert.ok(Math.abs(change) < 0.05, `${m.name} ${y}: ${(change * 100).toFixed(1)}%`);
+        }
+    }
+});
+
 // --- aggregation and metrics ---------------------------------------------------
 
 test('aggregate skips a municipality in a year it lacks data', () => {

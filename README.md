@@ -45,6 +45,7 @@ Docker serves the site with nginx (with gzip on) behind Traefik. The domain come
 - **Current revenue** (*receitas correntes*) is chapters 01–08 of the budget classification: taxes, fees, current transfers and sales. It excludes loans, asset sales and capital transfers.
 - **Known gaps.**
   - INE's dwelling series ends in 2022; later years are extrapolated and flagged with ⚠️.
+  - INE's 2020 dwelling count is out of line with 2019 and 2021 (both close to the 2021 Census) by up to 14%, so 2020 uses the midpoint of the two.
   - Penedono has no DGAL accounts from 2019 onwards.
   - Porto Moniz's 2023 IMI is negative after refunds and is treated as missing.
   - Large swings in a few small municipalities are usually hydroelectric dams, whose IMI has been litigated and refunded.

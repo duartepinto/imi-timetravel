@@ -48,6 +48,7 @@ DOREC = {
 }
 
 INE_DWELLINGS = 'https://www.ine.pt/ine/json_indicador/pindica.jsp?op=2&varcd=0008329&Dim1=T&lang=PT'
+SPIKE_YEAR = 2020  # see dwellings()
 
 # The DGAL disambiguates the two Calhetas and the two Lagoas in brackets.
 CODES = {
@@ -154,6 +155,12 @@ def dwellings(codes):
             code = e['geocod'][-4:]
             if len(e['geocod']) == 7 and code in codes and e.get('valor'):
                 out.setdefault(code, {})[int(year)] = int(e['valor'])
+    # 2020 is out of line with the rest of the series: 2019 and 2021 both sit
+    # close to the 2021 Census (median gap 0.4% over two years), but 2020 jumps
+    # away and back (Tarouca 6 244 -> 7 110 -> 6 262). Use the midpoint.
+    for years in out.values():
+        if SPIKE_YEAR - 1 in years and SPIKE_YEAR + 1 in years:
+            years[SPIKE_YEAR] = round((years[SPIKE_YEAR - 1] + years[SPIKE_YEAR + 1]) / 2)
     return out, data['DataUltimoAtualizacao']
 
 
