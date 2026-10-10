@@ -32,7 +32,7 @@ Docker serves the site with nginx (with gzip on) behind Traefik. The domain come
 |---|---|---|
 | `data/national.json` | IMI collected on urban property and the number of taxed urban properties, 2013–2025 | [Autoridade Tributária, Estatísticas do Património](https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Pages/IMI.aspx) |
 | `data/municipalities.json` | IMI, IMT and current revenue per municipality; dwelling counts | [DGAL, Contas de Gerência](https://portalautarquico.dgal.gov.pt/pt-PT/financas-locais/dados-financeiros/contas-de-gerencia/); [INE, indicator 0008329](https://www.ine.pt/xurl/indx/0008329/PT) |
-| `data/rates.json` | Urban IMI rate per municipality and year, 2013–2026, plus freguesia rates | [Portal das Finanças, Consultar Taxas IMI](https://www.portaldasfinancas.gov.pt/pt/main.jsp?body=/imi/consultarTaxasIMIForm.jsp) |
+| `data/rates.json` | Urban IMI rate per municipality and year from 2013 (complete years only), plus freguesia rates | [Portal das Finanças, Consultar Taxas IMI](https://www.portaldasfinancas.gov.pt/pt/main.jsp?body=/imi/consultarTaxasIMIForm.jsp) |
 | `data/map.json` | Pre-projected SVG paths for the 308 municipalities and 20 districts/regions | [DGT, CAOP 2025](https://www.dgterritorio.gov.pt/cartografia/cartografia-tematica/caop) |
 | `data/inflation_pt.json` | Euro-area HICP, December on December (shared with the IRS project) | Eurostat |
 

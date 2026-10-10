@@ -122,6 +122,7 @@ def main():
     municipalities = json.loads((ROOT / 'data' / 'map.json').read_text(encoding='utf-8'))['municipalities']
     rates = {}
     for year in range(first, last + 1):
+        before = {code: dict(entry['years']) for code, entry in rates.items()}
         for district in DISTRICTS:
             page = fetch(district_url(year, district), f'{year}-{district[:2]}.html')
             for row in parse_district(page):
@@ -140,6 +141,13 @@ def main():
                             year_entry['urban'] = max(set(values), key=values.count)
                             year_entry['byFreguesia'] = True
                 entry['years'][str(year)] = year_entry
+        # Municipalities have until 31 December to send next year's rates, so
+        # the current year is only partly filled in; leave it out until it is.
+        covered = sum(str(year) in entry['years'] for entry in rates.values())
+        if covered < 0.9 * len(municipalities):
+            print(f'{year}: only {covered} municipalities so far, skipped', file=sys.stderr)
+            rates = {code: {**entry, 'years': before.get(code, {})} for code, entry in rates.items() if before.get(code)}
+            continue
         print(year, len(rates), file=sys.stderr)
 
     out = {
