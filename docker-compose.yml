@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  imi-timetravel:
+    build: .
+    container_name: imi-timetravel
+    restart: unless-stopped
+    networks:
+      - home-server_default
+    ports:
+      - "8090:80"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.imi-timetravel.rule=Host(`${IMI_TIMETRAVEL_DOMAIN}`)
+      - traefik.http.routers.imi-timetravel.entrypoints=web,websecure
+      - traefik.http.routers.imi-timetravel.tls.certresolver=myresolver
+networks:
+  home-server_default:
+    external: true

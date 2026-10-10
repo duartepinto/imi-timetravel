@@ -1,0 +1,8 @@
+.git
+.gitignore
+README.md
+CLAUDE.md
+docker-compose.yml
+Dockerfile
+scripts
+tests

@@ -1,0 +1,804 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f8f9fa;
+}
+
+a {
+    color: #5a4fcf;
+}
+
+body > header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-align: center;
+    padding: 2rem 1rem;
+    margin-bottom: 2rem;
+}
+
+body > header h1 {
+    font-size: 2.5rem;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+}
+
+body > header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.coffee-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #FFDD00;
+    color: #000;
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-top: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.coffee-button:hover {
+    background: #FFE135;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.coffee-icon {
+    font-size: 1.2rem;
+}
+
+main {
+    max-width: min(1300px, 100%);
+    margin: 0 auto;
+    padding: 0 1rem 3rem;
+    display: grid;
+    gap: 2rem;
+}
+
+main > * {
+    min-width: 0;
+}
+
+.card {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.card h2 {
+    margin-bottom: 0.75rem;
+}
+
+.card h3 {
+    margin: 2rem 0 0.5rem;
+    font-size: 1.1rem;
+}
+
+.chart-note {
+    margin: 0 0 1rem;
+    color: #4b5563;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.load-error {
+    background: #fdecea;
+    color: #8a1c1c;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+/* --- headline ---------------------------------------------------------- */
+
+.headline-lede {
+    font-size: 1.5rem;
+    line-height: 1.35;
+    margin-bottom: 1.25rem;
+}
+
+.stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #555;
+    font-weight: 600;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.stat-note {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+/* --- charts -------------------------------------------------------------- */
+
+.chart-box {
+    position: relative;
+    height: 320px;
+}
+
+.chart-box-tall {
+    height: 380px;
+}
+
+.chart-box-short {
+    height: 220px;
+}
+
+/* --- controls ---------------------------------------------------------- */
+
+.controls {
+    display: flex;
+    gap: 1rem 2rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.input-group label {
+    font-weight: 600;
+    color: #555;
+}
+
+.input-group input,
+.input-group select {
+    padding: 0.75rem;
+    border: 2px solid #e1e5e9;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-family: inherit;
+    background: white;
+    transition: border-color 0.3s;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #555;
+    padding-bottom: 0.75rem;
+}
+
+/* --- explorer ---------------------------------------------------------- */
+
+.explorer-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+}
+
+.breadcrumb {
+    font-size: 0.95rem;
+}
+
+.breadcrumb .sep {
+    margin: 0 0.4rem;
+    color: #9ca3af;
+}
+
+.explorer-body {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
+    gap: 2rem;
+    align-items: start;
+}
+
+.map-wrap {
+    position: relative;
+}
+
+#map {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 78vh;
+    aspect-ratio: 471 / 597;
+}
+
+#map path {
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+
+.inset-box {
+    fill: none;
+    stroke: #d1d5db;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+}
+
+.inset-label {
+    font-size: 7px;
+    fill: #6b7280;
+}
+
+.district {
+    stroke: #fff;
+    stroke-width: 1.5;
+    cursor: pointer;
+    transition: opacity 0.3s;
+}
+
+.municipality {
+    stroke: #fff;
+    stroke-width: 0.6;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+/* Focus and hover are drawn by the outline layer; the browser's own focus
+   ring would frame the shape's bounding box and linger after a click. */
+#map path:focus {
+    outline: none;
+}
+
+/* Zoomed into a district: its municipalities replace the district fills. */
+#map.zoomed .district {
+    opacity: 0.25;
+}
+
+#map.zoomed .district.active {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#map.zoomed .municipality.in-scope {
+    opacity: 1;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.outline {
+    fill: none;
+    pointer-events: none;
+    stroke-linejoin: round;
+}
+
+.outline-district {
+    stroke: #333;
+    stroke-width: 1.5;
+}
+
+.outline-hover {
+    stroke: #333;
+    stroke-width: 2;
+}
+
+.outline-selected {
+    stroke: #111;
+    stroke-width: 3;
+}
+
+.map-tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: white;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    z-index: 2;
+    white-space: nowrap;
+}
+
+.map-tooltip .muted {
+    color: #6b7280;
+}
+
+.map-legend {
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    color: #555;
+}
+
+.map-legend ul {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.9rem;
+}
+
+.map-legend li,
+.legend-note {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.legend-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.legend-note {
+    margin-top: 0.25rem;
+}
+
+.swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1px solid rgba(0,0,0,0.08);
+}
+
+.swatch-empty {
+    background: #fff;
+    border-color: #d1d5db;
+}
+
+.map-hint {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 0.5rem;
+}
+
+.ranking {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.scope-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 1rem;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.rank-block h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+}
+
+.rank-list {
+    list-style: none;
+    display: grid;
+    gap: 0.4rem;
+    counter-reset: rank;
+}
+
+.rank-list a {
+    display: grid;
+    grid-template-columns: 1.5rem 1fr auto;
+    grid-template-areas: "n name change" "n district change";
+    align-items: center;
+    column-gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    text-decoration: none;
+    color: inherit;
+    counter-increment: rank;
+}
+
+.rank-list a::before {
+    content: counter(rank);
+    grid-area: n;
+    font-weight: 700;
+    color: #9ca3af;
+}
+
+.rank-list a:hover {
+    border-color: #667eea;
+    background: #f7f7ff;
+}
+
+.rank-name {
+    grid-area: name;
+    font-weight: 600;
+}
+
+.rank-district {
+    grid-area: district;
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.rank-change {
+    grid-area: change;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.falls .rank-change {
+    color: #1c5cab;
+}
+
+.rises .rank-change {
+    color: #a8302f;
+}
+
+/* --- detail ------------------------------------------------------------ */
+
+.detail-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.detail-head h2 {
+    margin: 0;
+}
+
+.detail-subtitle {
+    color: #6b7280;
+}
+
+.detail details {
+    font-size: 0.9rem;
+    color: #4b5563;
+}
+
+.detail details summary {
+    cursor: pointer;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.detail details p {
+    margin-bottom: 0.4rem;
+}
+
+/* --- table ------------------------------------------------------------- */
+
+/* Scroll shadows: a soft edge appears only on the side that has more content. */
+.table-scroll {
+    overflow-x: auto;
+    max-height: 32rem;
+    overflow-y: auto;
+    background:
+        linear-gradient(to right, white 30%, rgba(255,255,255,0)) left center,
+        linear-gradient(to left, white 30%, rgba(255,255,255,0)) right center,
+        radial-gradient(farthest-side at 0 50%, rgba(0,0,0,0.25), rgba(0,0,0,0)) left center,
+        radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,0.25), rgba(0,0,0,0)) right center;
+    background-repeat: no-repeat;
+    background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+    background-attachment: local, local, scroll, scroll;
+}
+
+table {
+    width: 100%;
+    white-space: nowrap;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+}
+
+th, td {
+    padding: 0.6rem 0.75rem;
+    text-align: right;
+    border-bottom: 1px solid #e1e5e9;
+}
+
+th:first-child, td:first-child {
+    text-align: left;
+}
+
+th {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa;
+    z-index: 1;
+}
+
+th button {
+    font: inherit;
+    font-weight: 600;
+    color: #555;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+th[aria-sort="ascending"] button::after { content: " ▲"; }
+th[aria-sort="descending"] button::after { content: " ▼"; }
+
+tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* --- methodology & sources --------------------------------------------- */
+
+.methodology p {
+    margin-bottom: 1rem;
+    color: #555;
+}
+
+#sourcesList {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1rem;
+}
+
+.source-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.25rem;
+    border: 1px solid #e1e5e9;
+    border-top: 3px solid #764ba2;
+    border-radius: 8px;
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.source-card:hover {
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.source-card header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+}
+
+.source-card h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    line-height: 1.3;
+}
+
+.source-publisher {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #5a4fcf;
+    background: #f0efff;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+}
+
+.source-card p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.5;
+}
+
+.year-chips {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.year-chip {
+    display: inline-flex;
+    align-items: stretch;
+    border: 1px solid #e1e5e9;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+}
+
+.year-chip a {
+    padding: 0.15rem 0.5rem;
+    text-decoration: none;
+    color: #333;
+}
+
+.year-chip a:hover {
+    background: #f0efff;
+    color: #5a4fcf;
+}
+
+.year-chip .chip-archive {
+    border-left: 1px solid #e1e5e9;
+    padding: 0.15rem 0.35rem;
+    color: #6b7280;
+}
+
+.source-card .chip-key {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: -0.35rem;
+}
+
+.source-link {
+    margin-top: auto;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.source-link:hover {
+    text-decoration: underline;
+}
+
+.table-details {
+    margin-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 1rem;
+}
+
+.table-details summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #5a4fcf;
+}
+
+.table-details h3 {
+    margin-top: 1rem;
+}
+
+/* --- small screens ----------------------------------------------------- */
+
+@media (max-width: 900px) {
+    .explorer-body {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    body > header h1 {
+        font-size: 1.8rem;
+    }
+
+    .card {
+        padding: 1rem;
+    }
+
+    .controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .headline-lede {
+        font-size: 1.2rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .chart-box,
+    .chart-box-tall {
+        height: 280px;
+    }
+}
+
+.rank-empty {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+#map.zoomed .insets {
+    display: none;
+}
+
+.section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.section-head h2 {
+    margin: 0;
+}
+
+.segmented {
+    display: inline-flex;
+    border: 2px solid #e1e5e9;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.segmented button {
+    font: inherit;
+    font-size: 0.9rem;
+    padding: 0.45rem 0.9rem;
+    border: none;
+    background: white;
+    color: #555;
+    cursor: pointer;
+}
+
+.segmented button + button {
+    border-left: 2px solid #e1e5e9;
+}
+
+.segmented button[aria-pressed="true"] {
+    background: #667eea;
+    color: white;
+    font-weight: 600;
+}
+
+.stat-value small {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #555;
+}
+
+.detail {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.summary-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.summary-head h3 {
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+.summary-stats {
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    margin-bottom: 0;
+}
+
+.link-button {
+    justify-self: start;
+    font: inherit;
+    font-size: 0.9rem;
+    color: #5a4fcf;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: underline;
+}

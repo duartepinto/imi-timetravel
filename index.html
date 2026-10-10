@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMI em Portugal ao Longo do Tempo (Ajustado à Inflação)</title>
+    <meta name="description" content="Como mudou o IMI em Portugal desde 2013, por distrito e município, comparado com a inflação.">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>IMI em Portugal ao Longo do Tempo</h1>
+        <p>O Imposto Municipal sobre Imóveis desde <span data-first-year>2013</span>, comparado com a inflação</p>
+        <a href="https://coff.ee/duartepinto" target="_blank" class="coffee-button">
+            <span class="coffee-icon">☕</span>
+            Buy me a coffee
+        </a>
+    </header>
+
+    <main>
+        <p id="loadError" class="load-error" hidden>Não foi possível carregar os dados. Tente recarregar a página.</p>
+
+        <section class="card overview">
+            <div id="headline" class="headline"></div>
+            <h2>IMI médio por prédio urbano</h2>
+            <p class="chart-note">Coleta de IMI dos prédios urbanos a dividir pelo número de prédios urbanos tributados,
+            por ano do imposto. A linha azul converte cada ano para euros de <span data-target-year></span>.</p>
+            <div class="chart-box chart-box-tall"><canvas id="nationalChart" aria-label="Gráfico do IMI médio por prédio urbano, nominal e real" role="img"></canvas></div>
+        </section>
+
+        <section class="card revenue">
+            <div class="section-head">
+                <h2>Receita das câmaras: IMI e IMT</h2>
+                <div id="revenueMode" class="segmented" role="group" aria-label="Valores">
+                    <button type="button" data-mode="real" aria-pressed="true">A preços de <span data-target-year></span></button>
+                    <button type="button" data-mode="nominal" aria-pressed="false">Euros da altura</button>
+                </div>
+            </div>
+            <p class="chart-note">Receita total de todos os municípios, pelo ano em que entrou nos cofres. O IMI é o imposto
+            anual sobre quem tem casa; o IMT paga-se uma vez, na compra de um imóvel, e acompanha o mercado.</p>
+            <div id="revenueStats" class="stat-row"></div>
+            <div class="chart-box chart-box-tall"><canvas id="revenueChart" role="img" aria-label="Receita de IMI e IMT dos municípios por ano"></canvas></div>
+        </section>
+
+        <section class="card explorer">
+            <div class="explorer-head">
+                <h2>Por distrito e município</h2>
+                <nav id="breadcrumb" class="breadcrumb" aria-label="Localização"></nav>
+            </div>
+            <div class="controls">
+                <div class="input-group">
+                    <label for="metricSelect">Indicador</label>
+                    <select id="metricSelect">
+                        <option value="share" selected>IMI em % das receitas correntes</option>
+                        <option value="real">IMI por alojamento, a preços de hoje</option>
+                        <option value="nominal">IMI por alojamento, em euros correntes</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="municipalitySearch">Procurar município</label>
+                    <input id="municipalitySearch" list="municipalityOptions" placeholder="ex.: Gondomar" autocomplete="off">
+                    <datalist id="municipalityOptions"></datalist>
+                </div>
+                <label class="checkbox">
+                    <input type="checkbox" id="excludeSmall" checked>
+                    <span>Excluir do top 3 municípios com menos de <span id="smallThreshold">3000</span> alojamentos</span>
+                </label>
+            </div>
+
+            <div class="explorer-body">
+                <div class="map-wrap">
+                    <svg id="map" role="group" aria-label="Mapa de Portugal por distrito e município"></svg>
+                    <div id="mapTooltip" class="map-tooltip" hidden></div>
+                    <div id="mapLegend" class="map-legend"></div>
+                    <p id="mapHint" class="map-hint">Clique num distrito para ver os seus municípios.</p>
+                </div>
+                <aside id="ranking" class="ranking" aria-live="polite"></aside>
+            </div>
+
+            <div id="detail" class="detail" hidden>
+                <div class="detail-head">
+                    <h2 id="detailTitle"></h2>
+                    <span id="detailSubtitle" class="detail-subtitle"></span>
+                </div>
+
+                <h3>IMI por alojamento</h3>
+                <p class="chart-note">Receita de IMI do município a dividir pelo número de alojamentos familiares clássicos.
+                O IMI de cada ano é cobrado no ano seguinte.</p>
+                <div class="chart-box"><canvas id="perDwellingChart" role="img" aria-label="IMI por alojamento do município, distrito e país"></canvas></div>
+
+                <h3>Receita de IMI e IMT</h3>
+                <p class="chart-note">Pelo ano em que a receita entrou, a preços de <span data-target-year></span>.</p>
+                <div class="chart-box"><canvas id="detailRevenueChart" role="img" aria-label="Receita de IMI e IMT do município"></canvas></div>
+
+                <h3>Peso do IMI nas receitas correntes</h3>
+                <div class="chart-box"><canvas id="shareChart" role="img" aria-label="IMI em percentagem das receitas correntes"></canvas></div>
+
+                <h3>Taxa de IMI (prédios urbanos)</h3>
+                <p class="chart-note">Taxa fixada pelo município para cada ano do imposto, entre 0,3% e 0,45% (até 2015, o máximo era 0,5%).</p>
+                <div class="chart-box chart-box-short"><canvas id="rateChart" role="img" aria-label="Taxa de IMI ao longo dos anos"></canvas></div>
+                <div id="freguesiaRates"></div>
+            </div>
+
+            <details class="table-details">
+                <summary>Ver em tabela</summary>
+                <h3 id="tableTitle">Todos os municípios</h3>
+                <p id="tableNote" class="chart-note"></p>
+                <div class="table-scroll">
+                    <table id="municipalityTable"></table>
+                </div>
+            </details>
+        </section>
+
+        <section class="card methodology">
+            <h2>Metodologia</h2>
+            <p><strong>Ano do imposto.</strong> O IMI de um ano é liquidado e pago no ano seguinte (o IMI de 2023 paga-se em 2024).
+            Todos os valores estão indexados ao ano do imposto: a receita que as câmaras registam num ano é atribuída ao ano anterior.</p>
+            <p><strong>Inflação.</strong> Cada valor é convertido para euros de <span data-target-year></span> a partir do ano em que foi pago,
+            com a inflação de dezembro a dezembro do IHPC da área do euro (a mesma série usada na comparação de taxas de IRS).</p>
+            <p><strong>Valor nacional.</strong> O gráfico do topo usa as estatísticas da Autoridade Tributária: coleta de IMI dos prédios urbanos
+            a dividir pelos prédios urbanos tributados. É o valor mais exato disponível, mas só existe para o país.</p>
+            <p><strong>Municípios.</strong> Por município não há número de prédios publicado, por isso divide-se a receita de IMI
+            (DGAL, receita cobrada líquida) pelos alojamentos familiares clássicos estimados pelo INE. O resultado é
+            <em>IMI por alojamento</em>, não por prédio: a receita inclui também comércio, serviços e terrenos. As linhas de
+            distrito e de Portugal no detalhe de cada município são calculadas da mesma forma, para se poderem comparar.
+            A estimativa do INE termina em 2022; o valor de <span data-last-municipal-year></span> é extrapolado com o crescimento do
+            ano anterior e marcado com ⚠️.</p>
+            <p><strong>IMI e IMT.</strong> A comparação entre os dois impostos usa o ano em que a receita entrou nas câmaras
+            (DGAL, receita cobrada líquida), e não o ano do imposto, porque o IMT se paga no momento da compra. Cada valor é
+            convertido para euros de <span data-target-year></span> a partir desse ano.</p>
+            <p><strong>Receitas correntes.</strong> Impostos, taxas, transferências correntes, vendas de bens e serviços e outras
+            receitas correntes (capítulos 01 a 08). Exclui empréstimos, venda de património e transferências de capital,
+            que variam muito de ano para ano.</p>
+            <p><strong>Eventos que afetam todos os municípios.</strong> A avaliação geral dos prédios urbanos (2012–2013) reavaliou
+            cerca de 5 milhões de prédios, com aumentos faseados pela cláusula de salvaguarda até 2014. Desde 2016, o IMI Familiar
+            permite aos municípios deduzir um valor fixo por dependente.</p>
+            <p><strong>Top 3.</strong> Por defeito, ficam de fora do top 3 os municípios com menos de 3 000 alojamentos, onde um único
+            prédio (um hotel, uma barragem) pode mudar muito o resultado. Continuam no mapa e na tabela.</p>
+        </section>
+
+        <section class="card sources">
+            <h2>Fontes</h2>
+            <div id="sourcesList"></div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
