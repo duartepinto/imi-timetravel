@@ -950,3 +950,38 @@ a.term:focus-visible {
         min-width: 0;
     }
 }
+
+/* IMI Familiar, year by year, in the municipality detail. */
+.familiar-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.4rem;
+    list-style: none;
+}
+
+.familiar-year {
+    display: flex;
+    flex-direction: column;
+    padding: 0.35rem 0.4rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    color: #9ca3af;
+    text-align: center;
+}
+
+.familiar-year.on {
+    border-color: #12825a;
+    background: #e8f7f1;
+    color: #333;
+}
+
+.familiar-y {
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.familiar-v {
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+}

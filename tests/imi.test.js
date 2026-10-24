@@ -16,7 +16,7 @@ const read = (f) => JSON.parse(fs.readFileSync(path.join(ROOT, 'data', f), 'utf8
 const app = {};
 vm.createContext(app);
 vm.runInContext(fs.readFileSync(path.join(ROOT, 'script.js'), 'utf8') +
-    '\n;Object.assign(this, { FIRST_YEAR, SMALL_MUNICIPALITY, METRICS, inflationRate, inflationFactor, paymentYear, toReal, countValue, nationalSeries, aggregate, seriesFromYears, metricChange, ranking, changeClass, slugify, rateSeries, revenueByReceiptYear, priceIndex, decomposition, constructionValueSeries, triennialPaths, ageingCoefficient, ageingExample, averageRate, familiarSeries });', app);
+    '\n;Object.assign(this, { FIRST_YEAR, SMALL_MUNICIPALITY, METRICS, inflationRate, inflationFactor, paymentYear, toReal, countValue, nationalSeries, aggregate, seriesFromYears, metricChange, ranking, changeClass, slugify, rateSeries, revenueByReceiptYear, priceIndex, decomposition, constructionValueSeries, triennialPaths, ageingCoefficient, ageingExample, averageRate, familiarSeries, familiarLabel });', app);
 
 const inflation = read('inflation_pt.json');
 const national = read('national.json');
@@ -341,6 +341,17 @@ test('IMI Familiar: a rate cut in 2015, a fixed deduction from 2016', () => {
         assert.ok(r.share > 0 && r.share < 1 && r.dwellingShare > 0 && r.dwellingShare < 1, String(r.year));
     }
     assert.equal(byYear[2013].applying, 0);
+});
+
+test('IMI Familiar labels per municipality and year', () => {
+    assert.equal(app.familiarLabel({ type: 'deduction', amounts: { '1': 30, '2': 70, '3+': 140 } }), '30 / 70 / 140 €');
+    assert.equal(app.familiarLabel({ type: 'deduction', amounts: { '3+': 70 } }), '— / — / 70 €');
+    assert.equal(app.familiarLabel({ type: 'reduction', amounts: { '1': 0.1, '2': 0.15, '3+': 0.2 } }), '10 / 15 / 20%');
+    assert.equal(app.familiarLabel(null), null);
+    // Lisboa applies it in 2025; the rate series carries it through.
+    const lisboa = app.rateSeries(rates, '1106');
+    assert.equal(app.familiarLabel(lisboa.find(r => r.year === 2025).familiar), '30 / 70 / 140 €');
+    assert.equal(lisboa.find(r => r.year === 2013).familiar, null);
 });
 
 // --- sources -----------------------------------------------------------------

@@ -196,8 +196,18 @@ function rateSeries(rates, code) {
         year: Number(year),
         urban: row.urban,
         byFreguesia: Boolean(row.byFreguesia),
-        freguesias: row.freguesias || []
+        freguesias: row.freguesias || [],
+        familiar: row.familiar || null
     })).sort((a, b) => a.year - b.year);
+}
+
+// "20 / 40 / 70 €" (a deduction), "10 / 15 / 20%" (2015's rate cut), for 1, 2
+// and 3 or more dependents; "—" where the municipality does not apply it.
+function familiarLabel(familiar) {
+    if (!familiar) return null;
+    const value = k => familiar.amounts[k] == null ? '—'
+        : familiar.type === 'reduction' ? String(Math.round(familiar.amounts[k] * 100)) : String(familiar.amounts[k]);
+    return `${['1', '2', '3+'].map(value).join(' / ')}${familiar.type === 'reduction' ? '%' : ' €'}`;
 }
 
 // --- what IMI is made of -----------------------------------------------------
@@ -501,6 +511,8 @@ class App {
         });
         this.country = seriesFromYears(aggregate(this.municipalities.map(m => m.raw)), this.inflation, this.targetYear);
         this.national = nationalSeries(this.nationalData, this.inflation, this.targetYear);
+        this.familiarFirstYear = Math.min(...Object.values(this.rates.municipalities)
+            .flatMap(m => Object.entries(m.years).filter(([, row]) => row.familiar).map(([year]) => Number(year))));
     }
 
     // --- headline + national chart ---------------------------------------
@@ -1103,6 +1115,8 @@ class App {
         const last = m.series.find(r => r.year === this.lastMunicipalYear);
         const rates = rateSeries(this.rates, m.code);
         const lastRate = rates[rates.length - 1];
+        const familiarRange = rates.filter(r => r.year >= this.familiarFirstYear);
+        const familiarYears = familiarRange.filter(r => r.familiar);
         el('ranking').innerHTML = html`
             <div class="summary-head">
                 <h3>${m.name}</h3>
@@ -1120,6 +1134,9 @@ class App {
                 <div class="stat"><span class="stat-label">Taxa de IMI ${lastRate ? lastRate.year : ''}</span>
                     <span class="stat-value">${fmt.rate(lastRate && lastRate.urban)}</span>
                     <span class="stat-note">prédios urbanos</span></div>
+                <div class="stat"><span class="stat-label">IMI Familiar ${lastRate ? lastRate.year : ''}</span>
+                    <span class="stat-value">${lastRate && lastRate.familiar ? 'Sim' : 'Não'}</span>
+                    <span class="stat-note">${lastRate && lastRate.familiar ? `${familiarLabel(lastRate.familiar)} · ` : ''}${familiarYears.length} de ${familiarRange.length} anos desde ${this.familiarFirstYear}</span></div>
             </div>
             <button type="button" class="summary-more link-button" data-scroll="detail">Gráficos de ${m.name} ↓</button>`;
     }
@@ -1259,6 +1276,9 @@ class App {
         });
 
         const withFreguesias = rates.filter(r => r.freguesias.length);
+        el('familiarStrip').innerHTML = rates.filter(r => r.year >= this.familiarFirstYear).map(r => html`
+            <li class="familiar-year${r.familiar ? ' on' : ''}"><span class="familiar-y">${r.year}</span>
+                <span class="familiar-v">${r.familiar ? familiarLabel(r.familiar) : 'não'}</span></li>`).join('');
         el('freguesiaRates').innerHTML = withFreguesias.length ? html`
             <p class="chart-note">Em alguns anos, ${m.name} fixou taxas por freguesia (art. 112.º, n.º 6 do CIMI). Nesses
             anos, o gráfico mostra a taxa da maioria das freguesias.</p>
