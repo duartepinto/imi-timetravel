@@ -16,7 +16,7 @@ const read = (f) => JSON.parse(fs.readFileSync(path.join(ROOT, 'data', f), 'utf8
 const app = {};
 vm.createContext(app);
 vm.runInContext(fs.readFileSync(path.join(ROOT, 'script.js'), 'utf8') +
-    '\n;Object.assign(this, { FIRST_YEAR, SMALL_MUNICIPALITY, METRICS, inflationRate, inflationFactor, paymentYear, toReal, countValue, nationalSeries, aggregate, seriesFromYears, metricChange, ranking, changeClass, slugify, rateSeries, revenueByReceiptYear, priceIndex, decomposition, constructionValueSeries, triennialPaths, ageingCoefficient, ageingExample, averageRate });', app);
+    '\n;Object.assign(this, { FIRST_YEAR, SMALL_MUNICIPALITY, METRICS, inflationRate, inflationFactor, paymentYear, toReal, countValue, nationalSeries, aggregate, seriesFromYears, metricChange, ranking, changeClass, slugify, rateSeries, revenueByReceiptYear, priceIndex, decomposition, constructionValueSeries, triennialPaths, ageingCoefficient, ageingExample, averageRate, familiarSeries });', app);
 
 const inflation = read('inflation_pt.json');
 const national = read('national.json');
@@ -313,6 +313,34 @@ test('INE indices cover every year of the national series', () => {
         for (const y of nationalYears) assert.ok(indices[key].years[String(y)] > 0, `${key} ${y}`);
         assert.match(indices[key].url, /^https:\/\/www\.ine\.pt\//);
     }
+});
+
+test('IMI Familiar: a rate cut in 2015, a fixed deduction from 2016', () => {
+    let any2015 = false;
+    for (const [code, m] of Object.entries(rates.municipalities)) {
+        for (const [year, row] of Object.entries(m.years)) {
+            if (!row.familiar) continue;
+            const { type, amounts } = row.familiar;
+            assert.equal(type, Number(year) === 2015 ? 'reduction' : 'deduction', `${code} ${year}`);
+            assert.ok(Number(year) >= 2015, `${code} ${year}: IMI Familiar before 2015`);
+            for (const [k, v] of Object.entries(amounts)) {
+                assert.ok(['1', '2', '3+'].includes(k));
+                assert.ok(type === 'reduction' ? v > 0 && v <= 0.2 : Number.isInteger(v) && v > 0, `${code} ${year} ${k}: ${v}`);
+            }
+            any2015 ||= Number(year) === 2015;
+        }
+    }
+    assert.ok(any2015);
+    // The amounts set by art. 112.º-A, as most municipalities apply them.
+    const series = app.familiarSeries(rates, municipal, nationalYears);
+    const byYear = Object.fromEntries(series.map(r => [r.year, r]));
+    assert.deepEqual({ ...byYear[2015].amounts }, { '1': 0.1, '2': 0.15, '3+': 0.2 });
+    assert.deepEqual({ ...byYear[2016].amounts }, { '1': 20, '2': 40, '3+': 70 });
+    assert.deepEqual({ ...byYear[2025].amounts }, { '1': 30, '2': 70, '3+': 140 });
+    for (const r of series.filter(r => r.applying)) {
+        assert.ok(r.share > 0 && r.share < 1 && r.dwellingShare > 0 && r.dwellingShare < 1, String(r.year));
+    }
+    assert.equal(byYear[2013].applying, 0);
 });
 
 // --- sources -----------------------------------------------------------------

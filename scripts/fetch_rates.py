@@ -10,13 +10,20 @@ does not hit the AT again; delete the folder to refresh.
 `ano` on the AT form is the year the tax refers to ("ano respeitante ao
 imposto"), billed the following spring — the same tax-year indexing the site
 uses everywhere.
+
+Each municipality also links to its IMI Familiar for the year (art. 112.º-A):
+in 2015 a cut in the rate per number of dependents, from 2016 a fixed
+deduction in euros. It is stored as `familiar` only when the municipality
+applies it, with the amounts it applies.
 """
 import html
+import http.client
 import json
 import re
 import sys
 import time
 import unicodedata
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -47,8 +54,16 @@ def fetch(url, cache_name):
     if path.exists():
         return path.read_text(encoding='utf-8')
     req = urllib.request.Request(url, headers={'User-Agent': 'imi-timetravel data refresh'})
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        body = resp.read().decode('latin-1')
+    for attempt in range(4):
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                body = resp.read().decode('latin-1')
+            break
+        except (urllib.error.URLError, http.client.HTTPException, OSError):
+            # The AT drops a connection now and then on long runs.
+            if attempt == 3:
+                raise
+            time.sleep(10 * (attempt + 1))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(body, encoding='utf-8')
     time.sleep(0.4)  # be polite to the AT
@@ -76,8 +91,38 @@ def parse_district(page):
             'name': text(cells[1]),
             'urban': percent(text(cells[2])),
             'hasFreguesiaRates': 'consultaTaxasFreguesias' in row,
+            'familiarUrl': familiar_url(row),
         })
     return rows
+
+
+def familiar_url(row):
+    """The 'por agregado' link: consultaReducaoTaxa (2015, only where the
+    municipality applies it) or consultaDeducao (2016 on, every municipality)."""
+    match = re.search(r'href="([^"]*(?:consultaDeducao|consultaReducaoTaxa)[^"]*)"', row)
+    return f"{BASE}/pt/{html.unescape(match.group(1)).lstrip('/')}" if match else None
+
+
+DEPENDENTS = {'1': '1', '2': '2', '3 ou mais': '3+'}
+
+
+def parse_familiar(page):
+    """{'type': 'reduction' | 'deduction', 'amounts': {'1': .., '2': .., '3+': ..}}
+    with only the amounts that apply, or None. Deduction pages list the legal
+    amounts for every municipality and mark the ones it applies with 'Sim'."""
+    kind, amounts = None, {}
+    for row in re.findall(r'<tr[^>]*>(.*?)</tr>', page, flags=re.S):
+        cells = [text(c) for c in re.findall(r'<td[^>]*>(.*?)</td>', row, flags=re.S)]
+        if not cells or cells[0] not in DEPENDENTS or len(cells) < 2:
+            continue
+        kind = 'reduction' if '%' in cells[1] else 'deduction'
+        if kind == 'reduction':
+            value = percent(cells[1].replace(' %', ',0 %') if ',' not in cells[1] else cells[1])
+        else:
+            value = int(cells[1]) if len(cells) > 2 and cells[2] == 'Sim' and cells[1].isdigit() else None
+        if value:
+            amounts[DEPENDENTS[cells[0]]] = value
+    return {'type': kind, 'amounts': amounts} if amounts else None
 
 
 def parse_freguesias(page):
@@ -140,6 +185,10 @@ def main():
                             values = [f['urban'] for f in freguesias]
                             year_entry['urban'] = max(set(values), key=values.count)
                             year_entry['byFreguesia'] = True
+                if row['familiarUrl']:
+                    familiar = parse_familiar(fetch(row['familiarUrl'], f'{year}-a{row["code"]}.html'))
+                    if familiar:
+                        year_entry['familiar'] = familiar
                 entry['years'][str(year)] = year_entry
         # Municipalities have until 31 December to send next year's rates, so
         # the current year is only partly filled in; leave it out until it is.
@@ -154,7 +203,9 @@ def main():
         'source': {
             'name': 'Autoridade Tributária — Consultar Taxas IMI/CA por Município e Ano',
             'url': f'{BASE}/pt/main.jsp?body=/imi/consultarTaxasIMIForm.jsp',
-            'note': 'Municipalities missing from a year pay the minimum rate (art. 112.º CIMI).',
+            'note': 'Municipalities missing from a year pay the minimum rate (art. 112.º CIMI). '
+                    '`familiar` is the IMI Familiar the municipality applies (art. 112.º-A): '
+                    'a rate cut (decimal) in 2015, a fixed deduction in euros from 2016, per number of dependents.',
         },
         'municipalities': dict(sorted(rates.items())),
     }

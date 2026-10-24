@@ -13,7 +13,7 @@ A sister project of `tabelas-irs-timetravel`, built the same way: a static site 
   - IMI per dwelling, at today's prices;
   - IMI per dwelling, in euros of the time.
 - **Municipality detail.** Key figures, IMI per dwelling against the district and the country, IMI vs IMT, IMI's share of current revenue, and the IMI rate history, including rates set per freguesia where they exist.
-- **Why IMI lags inflation.** The IMI formula, with each part of the VPT, then the national split IMI = VPT × effective rate (since 2013 the average VPT rose about 21% and the effective rate fell about 11%, while prices rose 31%). Each part that should grow over time has its own chart: the construction value Vc against construction costs, the three-yearly update (only 75% of the inflation coefficient for housing, and late), the location coefficients against house prices, an ageing (Cv) example, and the average municipal rate.
+- **Why IMI lags inflation.** The IMI formula, with each part of the VPT, then the national split IMI = VPT × effective rate (since 2013 the average VPT rose about 21% and the effective rate fell about 11%, while prices rose 31%). Each part that should grow over time has its own chart: the construction value Vc against construction costs, the three-yearly update (only 75% of the inflation coefficient for housing, and late), the location coefficients against house prices, an ageing (Cv) example, the average municipal rate, and IMI Familiar: how many municipalities apply it, and its amounts against inflation.
 
 Every view can be linked to: `#/porto/gondomar`.
 
@@ -35,7 +35,7 @@ Docker serves the site with nginx (with gzip on) behind Traefik. The domain come
 | `data/municipalities.json` | IMI, IMT and current revenue per municipality; dwelling counts | [DGAL, Contas de Gerência](https://portalautarquico.dgal.gov.pt/pt-PT/financas-locais/dados-financeiros/contas-de-gerencia/); [INE, indicator 0008329](https://www.ine.pt/xurl/indx/0008329/PT) |
 | `data/vpt_components.json` | Construction value per year, triennial update coefficients, ageing table and zonamento revisions | CIMI and the portarias cited in the file |
 | `data/indices.json` | Construction costs of new housing and house prices, yearly averages | [INE 0011748](https://www.ine.pt/xurl/indx/0011748/PT), [INE 0014765](https://www.ine.pt/xurl/indx/0014765/PT) |
-| `data/rates.json` | Urban IMI rate per municipality and year from 2013 (complete years only), plus freguesia rates | [Portal das Finanças, Consultar Taxas IMI](https://www.portaldasfinancas.gov.pt/pt/main.jsp?body=/imi/consultarTaxasIMIForm.jsp) |
+| `data/rates.json` | Urban IMI rate per municipality and year from 2013 (complete years only), plus freguesia rates and IMI Familiar | [Portal das Finanças, Consultar Taxas IMI](https://www.portaldasfinancas.gov.pt/pt/main.jsp?body=/imi/consultarTaxasIMIForm.jsp) |
 | `data/map.json` | Pre-projected SVG paths for the 308 municipalities and 20 districts/regions | [DGT, CAOP 2025](https://www.dgterritorio.gov.pt/cartografia/cartografia-tematica/caop) |
 | `data/inflation_pt.json` | Euro-area HICP, December on December (shared with the IRS project) | Eurostat |
 

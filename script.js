@@ -336,6 +336,46 @@ function averageRate(municipalData, rates, years) {
     });
 }
 
+// IMI Familiar (art. 112.º-A) by year: how many municipalities apply it, the
+// share of dwellings they hold, and the amounts most of them apply and the
+// highest any applies (a rate cut in 2015, euros per household from 2016).
+// Years after the last dwelling counts reuse those counts.
+function familiarSeries(rates, municipalData, years) {
+    const dwellingYears = Object.values(municipalData.municipalities).flatMap(m => Object.keys(m.years).map(Number));
+    const lastDwellings = Math.max(...dwellingYears);
+    const mode = values => {
+        const counts = {};
+        for (const v of values) counts[v] = (counts[v] || 0) + 1;
+        const best = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+        return best ? Number(best[0]) : null;
+    };
+    return years.map(year => {
+        let municipalities = 0, applying = 0, dwellings = 0, covered = 0;
+        const amounts = { '1': [], '2': [], '3+': [] };
+        let type = null;
+        for (const [code, entry] of Object.entries(rates.municipalities)) {
+            const row = entry.years[year];
+            if (!row) continue;
+            municipalities += 1;
+            const own = municipalData.municipalities[code];
+            const count = own && own.years[Math.min(year, lastDwellings)] && countValue(own.years[Math.min(year, lastDwellings)].dwellings);
+            if (count) dwellings += count;
+            if (!row.familiar) continue;
+            applying += 1;
+            if (count) covered += count;
+            type = row.familiar.type;
+            for (const [k, v] of Object.entries(row.familiar.amounts)) amounts[k].push(v);
+        }
+        return {
+            year, type, applying,
+            share: municipalities ? applying / municipalities : null,
+            dwellingShare: dwellings ? covered / dwellings : null,
+            amounts: applying ? { '1': mode(amounts['1']), '2': mode(amounts['2']), '3+': mode(amounts['3+']) } : null,
+            maximum: applying ? { '1': Math.max(...amounts['1']), '2': Math.max(...amounts['2']), '3+': Math.max(...amounts['3+']) } : null
+        };
+    });
+}
+
 // ===========================================================================
 // UI
 // ===========================================================================
@@ -504,7 +544,7 @@ class App {
                 title: year => `IMI de ${year} (pago em ${paymentYear(Number(year))})`,
                 markers: [
                     { year: 2014, text: 'fim da avaliação geral' },
-                    { year: 2016, text: 'IMI Familiar' }
+                    { year: 2015, text: 'IMI Familiar' }
                 ]
             }),
             plugins: [endLabels(v => fmt.euro(v)), yearMarkers]
@@ -550,7 +590,7 @@ class App {
                 tooltip: indexTooltip,
                 title: year => `IMI de ${year} (${first.year} = 100)`,
                 markers: [
-                    { year: 2016, text: 'IMI Familiar' },
+                    { year: 2015, text: 'IMI Familiar' },
                     { year: 2024, text: 'atualização trienal' }
                 ]
             }),
@@ -736,6 +776,64 @@ class App {
                 title: year => `Taxas para o IMI de ${year}`
             }),
             plugins: [endLabels(v => fmt.rate(v))]
+        });
+
+        // IMI Familiar
+        const familiar = familiarSeries(this.rates, this.municipalData, years).filter(r => r.applying > 0);
+        const famFirst = familiar[0], famLast = familiar[familiar.length - 1];
+        const deductions = familiar.filter(r => r.type === 'deduction');
+        const dFirst = deductions[0];
+        const sameAmounts = (a, b) => ['1', '2', '3+'].every(k => a[k] === b[k]);
+        const dRaise = deductions.find(r => !sameAmounts(r.amounts, dFirst.amounts)) || dFirst;
+        const euros = a => listPt(['1', '2', '3+'].map(k => a[k]));
+        fill({
+            'familiar-last-year': famLast.year, 'familiar-applying-last': famLast.applying,
+            'familiar-share-last': fmt.pct(famLast.share), 'familiar-dwellings-last': fmt.pct(famLast.dwellingShare),
+            'familiar-first-year': famFirst.year, 'familiar-applying-first': famFirst.applying,
+            'familiar-share-first': fmt.pct(famFirst.share),
+            'familiar-cuts': famFirst.type === 'reduction' ? listPt(['1', '2', '3+'].map(k => `${Math.round(famFirst.maximum[k] * 100)}%`)) : '',
+            'familiar-deduction-year': dFirst.year, 'familiar-amounts-first': euros(dFirst.amounts),
+            'familiar-amounts-last': euros(dRaise.amounts), 'familiar-raise-year': dRaise.year
+        });
+        const familiarOptions = chartOptions({
+            y: { min: 0, max: 1, ticks: { callback: v => fmt.pct(v) } },
+            tooltip: ctx => `${ctx.dataset.label}: ${fmt.pct(ctx.parsed.y)}`,
+            title: year => `IMI Familiar de ${year}`
+        });
+        familiarOptions.plugins.legend.labels.pointStyle = 'rect';
+        this.replaceChart('familiar', el('familiarChart'), {
+            type: 'bar',
+            data: {
+                labels: familiar.map(r => String(r.year)),
+                datasets: [
+                    // A lower `order` is drawn on top: the line over the bars.
+                    { type: 'bar', label: 'Municípios que o aplicam', data: familiar.map(r => r.share), backgroundColor: COLORS.real, borderWidth: 0, barPercentage: 0.7, order: 1 },
+                    { ...lineDataset('Alojamentos nesses municípios', familiar.map(r => r.dwellingShare), COLORS.rate, { width: 2.5 }), type: 'line', order: 0 }
+                ]
+            },
+            options: familiarOptions,
+            plugins: [endLabels(v => fmt.pct(v))]
+        });
+        const dependents = [['1', '1 dependente', COLORS.real], ['2', '2 dependentes', COLORS.vpt], ['3+', '3 ou mais', COLORS.rate]];
+        const amountOptions = chartOptions({
+            y: { min: 0, ticks: { callback: v => fmt.euro(v) } },
+            tooltip: ctx => `${ctx.dataset.label}: ${fmt.euro2(ctx.parsed.y)}`,
+            title: year => `Dedução para o IMI de ${year}`
+        });
+        // The dashed inflation lines are explained in the note, not the legend.
+        amountOptions.plugins.legend.labels.filter = item => !item.text.includes('inflação');
+        this.replaceChart('familiarAmount', el('familiarAmountChart'), {
+            type: 'line',
+            data: {
+                labels: deductions.map(r => String(r.year)),
+                datasets: dependents.flatMap(([k, label, color]) => [
+                    lineDataset(label, deductions.map(r => r.amounts[k]), color, { width: 2.5, stepped: true }),
+                    lineDataset(`${label}, valor de ${dFirst.year} com a inflação`,
+                        deductions.map(r => dFirst.amounts[k] * priceIndex(this.inflation, dFirst.year, r.year)), color, { width: 1.5, dash: [6, 4] })
+                ])
+            },
+            options: amountOptions,
+            plugins: [endLabels(v => fmt.euro(v))]
         });
 
         fill({
@@ -1266,7 +1364,7 @@ class App {
             {
                 title: 'Taxas de IMI',
                 publisher: 'Autoridade Tributária',
-                text: 'Taxa dos prédios urbanos fixada por cada município para cada ano, e taxas por freguesia onde existem.',
+                text: 'Taxa dos prédios urbanos fixada por cada município para cada ano, taxas por freguesia onde existem, e o IMI Familiar que cada município aplica.',
                 url: this.rates.source.url,
                 linkText: 'Consultar taxas por município'
             },

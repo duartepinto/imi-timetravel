@@ -134,7 +134,7 @@
                     <span class="formula-op">×</span>
                     <a class="term term-policy" href="#part-rate"><span class="term-symbol">Taxa</span><span class="term-name">fixada pela câmara</span><span class="term-tag">0,3% a 0,45%</span></a>
                     <span class="formula-op">−</span>
-                    <span class="term term-policy"><span class="term-symbol">IMI Familiar</span><span class="term-name">dedução por dependente</span><span class="term-tag">desde 2016, opcional</span></span>
+                    <a class="term term-policy" href="#part-familiar"><span class="term-symbol">IMI Familiar</span><span class="term-name">dedução por dependente</span><span class="term-tag">desde 2015, opcional</span></a>
                 </div>
                 <div class="formula-row">
                     <span class="formula-lhs">VPT</span><span class="formula-op">=</span>
@@ -224,6 +224,24 @@
                     <strong>Quanto mais baixa a taxa, menor o IMI.</strong></p>
                     <div class="chart-box"><canvas id="avgRateChart" role="img" aria-label="Taxa média fixada pelas câmaras e taxa efetiva"></canvas></div>
                 </div>
+                <div class="chart-cell" id="part-familiar">
+                    <h3>IMI Familiar: quem o aplica</h3>
+                    <p class="chart-note">Desde 2015, cada câmara pode baixar o IMI da casa onde vive uma família com dependentes
+                    a cargo. Em <span data-value="familiar-last-year"></span>, <span data-value="familiar-applying-last"></span> municípios (<span data-value="familiar-share-last"></span>) aplicavam-no,
+                    com <span data-value="familiar-dwellings-last"></span> dos alojamentos do país; em <span data-value="familiar-first-year"></span> eram
+                    <span data-value="familiar-applying-first"></span> (<span data-value="familiar-share-first"></span>). <strong>Quanto mais câmaras aplicam o IMI Familiar,
+                    menor a taxa efetiva.</strong></p>
+                    <div class="chart-box"><canvas id="familiarChart" role="img" aria-label="Municípios que aplicam o IMI Familiar e alojamentos que abrangem"></canvas></div>
+                </div>
+                <div class="chart-cell">
+                    <h3>IMI Familiar: valor da dedução</h3>
+                    <p class="chart-note">Em <span data-value="familiar-first-year"></span> era uma redução da taxa de até <span data-value="familiar-cuts"></span> para 1, 2 e 3 ou
+                    mais dependentes, à escolha de cada câmara; desde <span data-value="familiar-deduction-year"></span> é um valor fixo por ano, de <span data-value="familiar-amounts-first"></span> €,
+                    que passou para <span data-value="familiar-amounts-last"></span> € em <span data-value="familiar-raise-year"></span>. As linhas tracejadas são os valores de
+                    <span data-value="familiar-deduction-year"></span> corrigidos pela inflação. <strong>Quanto mais uma linha fica acima da sua tracejada,
+                    mais a dedução ganhou à inflação.</strong></p>
+                    <div class="chart-box"><canvas id="familiarAmountChart" role="img" aria-label="Valor da dedução do IMI Familiar por número de dependentes"></canvas></div>
+                </div>
             </div>
             <p class="chart-note components-closing"><strong>O que fica de fora.</strong> A área (A) e a afetação (Ca) não mudam com o tempo,
             e a qualidade e conforto (Cq) é uma tabela de majorações e minorações que não segue os preços (a última
@@ -270,8 +288,9 @@
             receitas correntes (capítulos 01 a 08). Exclui empréstimos, venda de património e transferências de capital,
             que variam muito de ano para ano.</p>
             <p><strong>Eventos que afetam todos os municípios.</strong> A avaliação geral dos prédios urbanos (2012–2013) reavaliou
-            cerca de 5 milhões de prédios, com aumentos faseados pela cláusula de salvaguarda até 2014. Desde 2016, o IMI Familiar
-            permite aos municípios deduzir um valor fixo por dependente.</p>
+            cerca de 5 milhões de prédios, com aumentos faseados pela cláusula de salvaguarda até 2014. Desde 2015, o IMI Familiar
+            permite aos municípios baixar o IMI de quem tem dependentes: em 2015 com uma redução da taxa, desde 2016 com uma
+            dedução fixa por agregado, conforme o número de dependentes.</p>
             <p><strong>Top 3.</strong> Por defeito, ficam de fora do top 3 os municípios com menos de 3 000 alojamentos, onde um único
             prédio (um hotel, uma barragem) pode mudar muito o resultado. Continuam no mapa e na tabela.</p>
         </section>
