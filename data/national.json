@@ -1,5 +1,5 @@
 {
- "description": "IMI on urban property (prédios urbanos), by tax year. \"collected\" is the coleta in euros (Quadro A, excluding liquidations under €10); \"taxedProperties\" is the number of taxed urban properties (Quadro B, VPT tributado).",
+ "description": "IMI on urban property (prédios urbanos), by tax year. \"collected\" is the coleta in euros (Quadro A, excluding liquidations under €10); \"taxedProperties\" and \"taxedVpt\" are the number and the VPT of taxed urban properties (Quadro B, VPT tributado); \"exemptVpt\" is the VPT of exempt urban properties (Quadro C).",
  "source": {
   "name": "Autoridade Tributária — Estatísticas do Património, IMI",
   "url": "https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Pages/IMI.aspx"
@@ -9,15 +9,19 @@
    "year": 2013,
    "collected": 1490096000,
    "taxedProperties": 6876820,
+   "taxedVpt": 407322363000,
+   "exemptVpt": 112233473000,
    "source": {
     "url": "https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Liquidacao_IMI_e_Transferencias_municipios_2014_2017.pdf",
-    "backup": null
+    "backup": "https://web.archive.org/web/20240426012235/https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Liquidacao_IMI_e_Transferencias_municipios_2014_2017.pdf"
    }
   },
   {
    "year": 2014,
    "collected": 1568982000,
    "taxedProperties": 6974525,
+   "taxedVpt": 419386411000,
+   "exemptVpt": 100653819000,
    "source": {
     "url": "https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Mapa_para_publicacao_IMI_2014_a_2018.pdf",
     "backup": "https://web.archive.org/web/20240721160736/https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Mapa_para_publicacao_IMI_2014_a_2018.pdf"
@@ -27,6 +31,8 @@
    "year": 2015,
    "collected": 1527050000,
    "taxedProperties": 6641409,
+   "taxedVpt": 414682157000,
+   "exemptVpt": 107159668000,
    "source": {
     "url": "https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Mapa_para_publicacao_IMI_2014_a_2018.pdf",
     "backup": "https://web.archive.org/web/20240721160736/https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Mapa_para_publicacao_IMI_2014_a_2018.pdf"
@@ -36,6 +42,8 @@
    "year": 2016,
    "collected": 1481044000,
    "taxedProperties": 6661105,
+   "taxedVpt": 416788288000,
+   "exemptVpt": 104971175000,
    "source": {
     "url": "https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Mapa_para_publicacao_IMI_2014_a_2018.pdf",
     "backup": "https://web.archive.org/web/20240721160736/https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Mapa_para_publicacao_IMI_2014_a_2018.pdf"
@@ -45,6 +53,8 @@
    "year": 2017,
    "collected": 1484734000,
    "taxedProperties": 6761269,
+   "taxedVpt": 423363329000,
+   "exemptVpt": 100799737000,
    "source": {
     "url": "https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Mapa_para_publicacao_IMI_2014_a_2018.pdf",
     "backup": "https://web.archive.org/web/20240721160736/https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Mapa_para_publicacao_IMI_2014_a_2018.pdf"
@@ -54,6 +64,8 @@
    "year": 2018,
    "collected": 1505677000,
    "taxedProperties": 6845126,
+   "taxedVpt": 436228269000,
+   "exemptVpt": 96309548000,
    "source": {
     "url": "https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/IMI_2018_a_2022_Mapa.pdf",
     "backup": "https://web.archive.org/web/20240721161048/https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/IMI_2018_a_2022_Mapa.pdf"
@@ -63,6 +75,8 @@
    "year": 2019,
    "collected": 1520164000,
    "taxedProperties": 6934563,
+   "taxedVpt": 445164282000,
+   "exemptVpt": 93737465000,
    "source": {
     "url": "https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/IMI_2018_a_2022_Mapa.pdf",
     "backup": "https://web.archive.org/web/20240721161048/https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/IMI_2018_a_2022_Mapa.pdf"
@@ -72,54 +86,66 @@
    "year": 2020,
    "collected": 1495600000,
    "taxedProperties": 6871323,
+   "taxedVpt": 448157209000,
+   "exemptVpt": 94786690000,
    "source": {
     "url": "https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/IMI_2020_a_2024_Mapa.pdf",
-    "backup": null
+    "backup": "https://web.archive.org/web/20261024130206/https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/IMI_2020_a_2024_Mapa.pdf"
    }
   },
   {
    "year": 2021,
    "collected": 1503312000,
    "taxedProperties": 6918771,
+   "taxedVpt": 452847133000,
+   "exemptVpt": 94181274000,
    "source": {
     "url": "https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Estatistica%20IMI_2021%20a%202025.pdf",
-    "backup": null
+    "backup": "https://web.archive.org/web/20261024130320/https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Estatistica%20IMI_2021%20a%202025.pdf"
    }
   },
   {
    "year": 2022,
    "collected": 1558683000,
    "taxedProperties": 6929825,
+   "taxedVpt": 458492695000,
+   "exemptVpt": 94620518000,
    "source": {
     "url": "https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Estatistica%20IMI_2021%20a%202025.pdf",
-    "backup": null
+    "backup": "https://web.archive.org/web/20261024130320/https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Estatistica%20IMI_2021%20a%202025.pdf"
    }
   },
   {
    "year": 2023,
    "collected": 1554407000,
    "taxedProperties": 6966407,
+   "taxedVpt": 471905773000,
+   "exemptVpt": 95004001000,
    "source": {
     "url": "https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Estatistica%20IMI_2021%20a%202025.pdf",
-    "backup": null
+    "backup": "https://web.archive.org/web/20261024130320/https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Estatistica%20IMI_2021%20a%202025.pdf"
    }
   },
   {
    "year": 2024,
    "collected": 1629879000,
    "taxedProperties": 7049118,
+   "taxedVpt": 505062686000,
+   "exemptVpt": 96418956000,
    "source": {
     "url": "https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Estatistica%20IMI_2021%20a%202025.pdf",
-    "backup": null
+    "backup": "https://web.archive.org/web/20261024130320/https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Estatistica%20IMI_2021%20a%202025.pdf"
    }
   },
   {
    "year": 2025,
    "collected": 1648812000,
    "taxedProperties": 7053898,
+   "taxedVpt": 506648901000,
+   "exemptVpt": 97830258000,
    "source": {
     "url": "https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Estatistica%20IMI_2021%20a%202025.pdf",
-    "backup": null
+    "backup": "https://web.archive.org/web/20261024130320/https://info.portaldasfinancas.gov.pt/pt/dgci/divulgacao/estatisticas/estatisticas_patrimonio/Documents/Estatistica%20IMI_2021%20a%202025.pdf"
    }
   }
  ]

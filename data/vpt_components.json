@@ -1,0 +1,225 @@
+{
+ "description": "The parts of the VPT (valor patrimonial tributário) of urban property that are meant to change over time. Hand-edited from the CIMI and the portarias cited on each entry.",
+ "constructionValue": {
+  "description": "Valor médio de construção por m² (art. 39.º CIMI), set each year by portaria. The base value Vc used in the VPT formula is 125% of it (the 25% stands for the land). It only applies to properties valued that year (Modelo 1 filed for a new, altered or reassessed property). The APCMC table cited here lists 2022 under \"301/2021\"; the portaria is 310/2021 (APCMC's own note on it, https://apcmc.pt/?p=23560, and PLMJ).",
+  "url": "https://apcmc.pt/legislacao/imi-2026-valor-medio-da-construcao-por-m%c2%b2-sobre-para-e-570/",
+  "backup": "https://web.archive.org/web/20261024130355/https://apcmc.pt/legislacao/imi-2026-valor-medio-da-construcao-por-m%c2%b2-sobre-para-e-570/",
+  "years": [
+   {
+    "year": 2012,
+    "average": 482.4,
+    "base": 603,
+    "portaria": "307/2011"
+   },
+   {
+    "year": 2013,
+    "average": 482.4,
+    "base": 603,
+    "portaria": "424/2012"
+   },
+   {
+    "year": 2014,
+    "average": 482.4,
+    "base": 603,
+    "portaria": "370/2013"
+   },
+   {
+    "year": 2015,
+    "average": 482.4,
+    "base": 603,
+    "portaria": "280/2014"
+   },
+   {
+    "year": 2016,
+    "average": 482.4,
+    "base": 603,
+    "portaria": "419/2015"
+   },
+   {
+    "year": 2017,
+    "average": 482.4,
+    "base": 603,
+    "portaria": "345-B/2016"
+   },
+   {
+    "year": 2018,
+    "average": 482.4,
+    "base": 603,
+    "portaria": "379/2017"
+   },
+   {
+    "year": 2019,
+    "average": 492,
+    "base": 615,
+    "portaria": "330-A/2018"
+   },
+   {
+    "year": 2020,
+    "average": 492,
+    "base": 615,
+    "portaria": "3/2020"
+   },
+   {
+    "year": 2021,
+    "average": 492,
+    "base": 615,
+    "portaria": "289/2020"
+   },
+   {
+    "year": 2022,
+    "average": 512,
+    "base": 640,
+    "portaria": "310/2021"
+   },
+   {
+    "year": 2023,
+    "average": 532,
+    "base": 665,
+    "portaria": "7-A/2023"
+   },
+   {
+    "year": 2024,
+    "average": 532,
+    "base": 665,
+    "portaria": "16/2024"
+   },
+   {
+    "year": 2025,
+    "average": 532,
+    "base": 665,
+    "portaria": "19/2025/1"
+   },
+   {
+    "year": 2026,
+    "average": 570,
+    "base": 712.5,
+    "portaria": "471/2025/1"
+   }
+  ]
+ },
+ "triennialUpdates": {
+  "description": "Art. 138.º CIMI: every three years after its last valuation or update, the VPT of a property is multiplied by the currency devaluation coefficient (CDM) of that year, taken from the yearly IRS/IRC portaria. Housing, building land and other properties get 75% of the update (n.º 2); commerce, industry and services get all of it (n.º 1). Each entry is the update made in `year` (it counts for that tax year) to properties last valued or updated in `cdmYear`.",
+  "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cimi/Pages/cimi138.aspx",
+  "backup": "https://web.archive.org/web/20261024133506/https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cimi/Pages/cimi138.aspx",
+  "housingShare": 0.75,
+  "updates": [
+   {
+    "year": 2015,
+    "cdmYear": 2012,
+    "coefficient": 1.0,
+    "portaria": "400/2015",
+    "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/diplomas_legislativos/Documents/Portaria_400_2015.pdf",
+    "backup": "https://web.archive.org/web/20261024130521/https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/diplomas_legislativos/Documents/Portaria_400_2015.pdf"
+   },
+   {
+    "year": 2018,
+    "cdmYear": 2015,
+    "coefficient": 1.02,
+    "portaria": "317/2018",
+    "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/diplomas_legislativos/Documents/Portaria_317_2018.pdf",
+    "backup": "https://web.archive.org/web/20261024130603/https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/diplomas_legislativos/Documents/Portaria_317_2018.pdf"
+   },
+   {
+    "year": 2021,
+    "cdmYear": 2018,
+    "coefficient": 1.0,
+    "portaria": "220/2021",
+    "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/diplomas_legislativos/Documents/Portaria_220_2021.pdf",
+    "backup": "https://web.archive.org/web/20240723113604/https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/diplomas_legislativos/Documents/Portaria_220_2021.pdf"
+   },
+   {
+    "year": 2022,
+    "cdmYear": 2019,
+    "coefficient": 1.01,
+    "portaria": "253/2022",
+    "url": "https://files.dre.pt/1s/2022/10/20300/0000200003.pdf",
+    "backup": "https://web.archive.org/web/20230208222934/https://files.dre.pt/1s/2022/10/20300/0000200003.pdf"
+   },
+   {
+    "year": 2023,
+    "cdmYear": 2020,
+    "coefficient": 1.09,
+    "portaria": "340/2023",
+    "url": "https://files.diariodarepublica.pt/1s/2023/11/21600/0000500006.pdf",
+    "backup": "https://web.archive.org/web/20250504023143/https://files.diariodarepublica.pt/1s/2023/11/21600/0000500006.pdf"
+   },
+   {
+    "year": 2024,
+    "cdmYear": 2021,
+    "coefficient": 1.13,
+    "portaria": "288/2024/1",
+    "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/diplomas_legislativos/Documents/Portaria_288_2024_1.pdf",
+    "backup": "https://web.archive.org/web/20250113003303/https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/diplomas_legislativos/Documents/Portaria_288_2024_1.pdf"
+   },
+   {
+    "year": 2025,
+    "cdmYear": 2022,
+    "coefficient": 1.06,
+    "portaria": "382/2025/1",
+    "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/diplomas_legislativos/Documents/Portaria_382_2025_1.pdf",
+    "backup": "https://web.archive.org/web/20251120014925/https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/diplomas_legislativos/Documents/Portaria_382_2025_1.pdf"
+   },
+   {
+    "year": 2026,
+    "cdmYear": 2023,
+    "coefficient": 1.04,
+    "portaria": "457/2026/1",
+    "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/diplomas_legislativos/Documents/portaria-457-2026-1.pdf",
+    "backup": "https://web.archive.org/web/20261015212711/https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/diplomas_legislativos/Documents/portaria-457-2026-1.pdf"
+   }
+  ]
+ },
+ "ageing": {
+  "description": "Coeficiente de vetustez Cv (art. 44.º CIMI), by whole years since the licence of use. It is fixed when the property is valued; the triennial update does not recompute it, only a new valuation does.",
+  "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cimi/Pages/cimi44.aspx",
+  "backup": "https://web.archive.org/web/20261024131944/https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cimi/Pages/cimi44.aspx",
+  "brackets": [
+   {
+    "maxAge": 1,
+    "cv": 1.0
+   },
+   {
+    "maxAge": 8,
+    "cv": 0.9
+   },
+   {
+    "maxAge": 15,
+    "cv": 0.85
+   },
+   {
+    "maxAge": 25,
+    "cv": 0.8
+   },
+   {
+    "maxAge": 40,
+    "cv": 0.75
+   },
+   {
+    "maxAge": 50,
+    "cv": 0.65
+   },
+   {
+    "maxAge": 60,
+    "cv": 0.55
+   },
+   {
+    "maxAge": null,
+    "cv": 0.4
+   }
+  ]
+ },
+ "location": {
+  "description": "Zonamento and coeficientes de localização Cl (arts. 42.º and 62.º CIMI), between 0.4 and 3.5. The CNAPU must propose them every three years; they only apply to properties valued after they come into force. The first zonamento (Portaria 982/2004) had partial changes until 420-A/2015 replaced it; only the zonamento in force is listed.",
+  "url": "https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cimi/Pages/cimi62.aspx",
+  "backup": "https://web.archive.org/web/20250518035806/https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cimi/Pages/cimi62.aspx",
+  "intervalYears": 3,
+  "revisions": [
+   {
+    "inForce": 2016,
+    "portaria": "420-A/2015",
+    "url": "https://informador.pt/legislacao/diploma/portaria-n-o-420-a-2015/",
+    "backup": "https://web.archive.org/web/20261024130747/https://informador.pt/legislacao/diploma/portaria-n-o-420-a-2015/"
+   }
+  ]
+ }
+}

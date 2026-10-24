@@ -200,6 +200,142 @@ function rateSeries(rates, code) {
     })).sort((a, b) => a.year - b.year);
 }
 
+// --- what IMI is made of -----------------------------------------------------
+
+// Prices between two tax years, measured like everything else from the year
+// each IMI is paid.
+function priceIndex(inflation, fromYear, year) {
+    return inflationFactor(inflation, paymentYear(fromYear), paymentYear(year));
+}
+
+// IMI per property = VPT per property × effective rate, from the AT figures.
+// The index columns are 100 in the first year.
+function decomposition(national, inflation) {
+    const first = national.years[0];
+    const base = {
+        imi: first.collected / first.taxedProperties,
+        vpt: first.taxedVpt / first.taxedProperties,
+        rate: first.collected / first.taxedVpt
+    };
+    return national.years.map(row => {
+        const imi = row.collected / row.taxedProperties;
+        const vpt = row.taxedVpt / row.taxedProperties;
+        const rate = row.collected / row.taxedVpt;
+        return {
+            year: row.year,
+            vptPerProperty: vpt,
+            effectiveRate: rate,
+            exemptShare: row.exemptVpt / (row.taxedVpt + row.exemptVpt),
+            imi: 100 * imi / base.imi,
+            vpt: 100 * vpt / base.vpt,
+            rate: 100 * rate / base.rate,
+            prices: 100 * priceIndex(inflation, first.year, row.year)
+        };
+    });
+}
+
+function constructionValueAt(components, year) {
+    const entry = components.constructionValue.years.find(r => r.year === year);
+    if (!entry) throw new Error(`no construction value for ${year}`);
+    return entry.base;
+}
+
+// Vc in force each year next to what it should follow: construction costs
+// (INE) and prices. Indices are 100 in the first year.
+function constructionValueSeries(components, indices, inflation, years) {
+    const vc0 = constructionValueAt(components, years[0]);
+    const costs = indices.constructionCosts.years;
+    const c0 = costs[String(years[0])];
+    return years.map(year => {
+        const vc = constructionValueAt(components, year);
+        const c = costs[String(year)];
+        return {
+            year, vc,
+            vcIndex: 100 * vc / vc0,
+            costs: c == null ? null : 100 * c / c0,
+            prices: 100 * priceIndex(inflation, years[0], year)
+        };
+    });
+}
+
+// Cumulative VPT multiplier of a home valued in `valuedIn`, updated every
+// three years (art. 138.º): with the 75% the law applies to housing, with the
+// full coefficient, and with prices. The gap to prices is split in two shares
+// of the price-indexed value that add up to the whole loss: what the 75% rule
+// costs, and what updating late (every three years, by a lagged and different
+// index) costs.
+function triennialPaths(components, inflation, years, { valuedIn = 2012 } = {}) {
+    const { updates, housingShare } = components.triennialUpdates;
+    let last = valuedIn, actual = 1, full = 1;
+    return years.filter(y => y >= valuedIn).map(year => {
+        let coefficient = null;
+        if (year - last === 3) {
+            const update = updates.find(u => u.year === year);
+            if (!update) throw new Error(`no triennial update for ${year}`);
+            coefficient = update.coefficient;
+            actual *= 1 + housingShare * (coefficient - 1);
+            full *= coefficient;
+            last = year;
+        }
+        const prices = priceIndex(inflation, valuedIn, year);
+        return {
+            year, coefficient, actual, full, prices,
+            lossRule: (full - actual) / prices,
+            lossTiming: (prices - full) / prices
+        };
+    });
+}
+
+function ageingCoefficient(components, age) {
+    return components.ageing.brackets.find(b => b.maxAge === null || age <= b.maxAge).cv;
+}
+
+// An example home built in `built` and valued in `valuedIn`: its VPT with the
+// triennial updates only (what it pays), and what a new valuation would give
+// each year, with the Vc of that year and the Cv of its age then. Everything
+// else in the formula is held equal. 100 = VPT in `valuedIn`.
+function ageingExample(components, inflation, years, { built = 2005, valuedIn = 2012 } = {}) {
+    const vc0 = constructionValueAt(components, valuedIn);
+    const cv0 = ageingCoefficient(components, valuedIn - built);
+    return triennialPaths(components, inflation, years, { valuedIn }).map(row => ({
+        year: row.year,
+        age: row.year - built,
+        cv: ageingCoefficient(components, row.year - built),
+        current: 100 * row.actual,
+        reassessed: 100 * (constructionValueAt(components, row.year) / vc0) *
+            (ageingCoefficient(components, row.year - built) / cv0),
+        prices: 100 * row.prices
+    }));
+}
+
+// Average urban rate set by the municipalities, each weighted by its taxable
+// base (IMI ÷ rate), so it is comparable with the effective rate. Years after
+// the last municipal accounts keep the weights of that last year. The share at
+// the 0.3% minimum counts every municipality with a rate, weights or not.
+function averageRate(municipalData, rates, years) {
+    const municipalities = Object.entries(municipalData.municipalities);
+    const accountYears = municipalities.flatMap(([, m]) => Object.keys(m.years).map(Number));
+    const lastAccounts = Math.max(...accountYears);
+    return years.map(year => {
+        const weightYear = Math.min(year, lastAccounts);
+        let imi = 0, base = 0, count = 0;
+        for (const [code, m] of municipalities) {
+            const own = m.years[weightYear];
+            const entry = rates.municipalities[code];
+            const rate = entry && entry.years[year] && entry.years[year].urban;
+            const weightRate = entry && entry.years[weightYear] && entry.years[weightYear].urban;
+            if (!own || !validImi(own.imi) || !rate || !weightRate) continue;
+            const weight = own.imi / weightRate;
+            imi += rate * weight;
+            base += weight;
+            count += 1;
+        }
+        const set = Object.values(rates.municipalities).map(m => m.years[year] && m.years[year].urban).filter(Boolean);
+        const atMinimum = set.length ? set.filter(rate => rate <= 0.003).length / set.length : null;
+        return { year, rate: count ? imi / base : null, atMinimum, estimatedWeights: year > lastAccounts };
+    });
+}
+
 // ===========================================================================
 // UI
 // ===========================================================================
@@ -232,6 +368,10 @@ const COLORS = {
     national: '#1baf7a',
     nominal: '#898781',
     imt: '#eb6834',
+    vpt: '#1baf7a',
+    rate: '#eb6834',
+    prices: '#898781',
+    loss: '#c3c2b7',
     grid: '#e1e0d9',
     axis: '#c3c2b7',
     ink: '#333',
@@ -248,6 +388,20 @@ const NO_DATA_FILL = '#ffffff';
 
 const el = id => document.getElementById(id);
 
+// Text of the descriptions lives in index.html; only the numbers come from
+// the data, into <span data-value="key"> placeholders.
+function fill(values) {
+    for (const [key, value] of Object.entries(values)) {
+        for (const node of document.querySelectorAll(`[data-value="${key}"]`)) node.textContent = value;
+    }
+}
+
+// "a, b e c"
+function listPt(items) {
+    const list = items.map(String);
+    return list.length < 2 ? list.join('') : `${list.slice(0, -1).join(', ')} e ${list[list.length - 1]}`;
+}
+
 function html(strings, ...values) {
     const escape = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const isRaw = v => v !== null && typeof v === 'object' && '__html' in v;
@@ -261,8 +415,8 @@ class App {
             if (!r.ok) throw new Error(`${f}: ${r.status}`);
             return r.json();
         });
-        [this.nationalData, this.municipalData, this.rates, this.map, this.inflation] = await Promise.all(
-            ['national.json', 'municipalities.json', 'rates.json', 'map.json', 'inflation_pt.json'].map(load));
+        [this.nationalData, this.municipalData, this.rates, this.map, this.inflation, this.components, this.indices] = await Promise.all(
+            ['national.json', 'municipalities.json', 'rates.json', 'map.json', 'inflation_pt.json', 'vpt_components.json', 'indices.json'].map(load));
 
         this.nationalRows = this.nationalData.years;
         this.lastNationalYear = Math.max(...this.nationalRows.map(r => r.year));
@@ -274,6 +428,7 @@ class App {
         this.buildEntities();
         this.renderHeadline();
         this.renderNationalChart();
+        this.renderComponents();
         this.revenueMode = 'real';
         this.renderRevenue();
         this.buildMap();
@@ -353,6 +508,239 @@ class App {
                 ]
             }),
             plugins: [endLabels(v => fmt.euro(v)), yearMarkers]
+        });
+    }
+
+    // --- what IMI is made of -------------------------------------------------
+
+    renderComponents() {
+        const years = this.nationalRows.map(r => r.year);
+        const labels = years.map(String);
+        const index = v => v == null ? '—' : v.toLocaleString('pt-PT', { maximumFractionDigits: 1 });
+        const indexAxis = { ticks: { callback: v => index(v) } };
+        const indexTooltip = ctx => `${ctx.dataset.label}: ${index(ctx.parsed.y)}`;
+        const pricesLine = (data, label = 'Preços') => lineDataset(label, data, COLORS.prices, { dash: [6, 4] });
+
+        // IMI = VPT × rate
+        const split = decomposition(this.nationalData, this.inflation);
+        const first = split[0], end = split[split.length - 1];
+        el('componentsStats').innerHTML = html`
+            <div class="stat"><span class="stat-label">VPT médio por prédio, ${first.year} → ${end.year}</span>
+                <span class="stat-value">${fmt.signedPct(end.vpt / 100 - 1)}</span>
+                <span class="stat-note">${fmt.euro(first.vptPerProperty)} → ${fmt.euro(end.vptPerProperty)} · real: <strong>${fmt.signedPct(end.vpt / end.prices - 1)}</strong></span></div>
+            <div class="stat"><span class="stat-label">Taxa efetiva</span>
+                <span class="stat-value">${fmt.signedPct(end.rate / 100 - 1)}</span>
+                <span class="stat-note">${fmt.rate(first.effectiveRate)} → ${fmt.rate(end.effectiveRate)}</span></div>
+            <div class="stat"><span class="stat-label">IMI por prédio</span>
+                <span class="stat-value">${fmt.signedPct(end.imi / 100 - 1)}</span>
+                <span class="stat-note">real: <strong>${fmt.signedPct(end.imi / end.prices - 1)}</strong> · os preços subiram ${fmt.pct(end.prices / 100 - 1)}</span></div>`;
+        this.replaceChart('components', el('componentsChart'), {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    lineDataset('IMI por prédio', split.map(r => r.imi), COLORS.real, { width: 3 }),
+                    lineDataset('VPT por prédio', split.map(r => r.vpt), COLORS.vpt),
+                    lineDataset('Taxa efetiva', split.map(r => r.rate), COLORS.rate),
+                    pricesLine(split.map(r => r.prices))
+                ]
+            },
+            options: chartOptions({
+                y: indexAxis,
+                tooltip: indexTooltip,
+                title: year => `IMI de ${year} (${first.year} = 100)`,
+                markers: [
+                    { year: 2016, text: 'IMI Familiar' },
+                    { year: 2024, text: 'atualização trienal' }
+                ]
+            }),
+            plugins: [endLabels(index), yearMarkers]
+        });
+
+        // Vc
+        const vc = constructionValueSeries(this.components, this.indices, this.inflation, years);
+        const vcFirst = vc[0], vcLast = vc[vc.length - 1];
+        const latestVc = this.components.constructionValue.years[this.components.constructionValue.years.length - 1];
+        fill({
+            'vc-first': fmt.euro2(vcFirst.vc), 'vc-first-year': vcFirst.year,
+            'vc-last': fmt.euro2(vcLast.vc), 'vc-last-year': vcLast.year,
+            'vc-latest': fmt.euro2(latestVc.base), 'vc-latest-year': latestVc.year,
+            'vc-costs': fmt.euro(vcFirst.vc * vcLast.costs / 100), 'vc-prices': fmt.euro(vcFirst.vc * vcLast.prices / 100)
+        });
+        el('vcLatest').hidden = latestVc.year === vcLast.year;
+        this.replaceChart('vc', el('vcChart'), {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    lineDataset('Vc', vc.map(r => r.vcIndex), COLORS.real, { width: 2.5, stepped: true }),
+                    lineDataset('Custos de construção (INE)', vc.map(r => r.costs), COLORS.rate),
+                    pricesLine(vc.map(r => r.prices))
+                ]
+            },
+            options: chartOptions({
+                y: indexAxis,
+                tooltip: ctx => ctx.datasetIndex === 0
+                    ? `Vc: ${fmt.euro2(vc[ctx.dataIndex].vc)}/m² (${index(ctx.parsed.y)})`
+                    : indexTooltip(ctx),
+                title: year => `Valor base de ${year}`
+            }),
+            plugins: [endLabels(index)]
+        });
+
+        // triennial update for a home valued in 2012 (the notes in index.html describe this example)
+        const valuedIn = 2012;
+        const homeYears = [valuedIn, ...years.filter(y => y > valuedIn)];
+        const paths = triennialPaths(this.components, this.inflation, homeYears, { valuedIn });
+        const pathEnd = paths[paths.length - 1];
+        const steps = paths.filter(r => r.coefficient !== null);
+        const coefficient = c => c.toLocaleString('pt-PT', { minimumFractionDigits: 2 });
+        fill({
+            'triennial-years': listPt(steps.map(r => r.year)),
+            'triennial-coefficients': listPt(steps.map(r => coefficient(r.coefficient)))
+        });
+        this.replaceChart('triennial', el('triennialChart'), {
+            type: 'line',
+            data: {
+                labels: homeYears.map(String),
+                datasets: [
+                    lineDataset('Com 75% (a lei)', paths.map(r => 100 * r.actual), COLORS.real, { width: 2.5, stepped: true }),
+                    lineDataset('Com 100% do coeficiente', paths.map(r => 100 * r.full), COLORS.vpt, { stepped: true }),
+                    pricesLine(paths.map(r => 100 * r.prices))
+                ]
+            },
+            options: chartOptions({
+                y: indexAxis,
+                tooltip: indexTooltip,
+                title: year => {
+                    const row = paths.find(r => r.year === Number(year));
+                    return row.coefficient === null ? year : `${year}: atualização, coeficiente ${row.coefficient.toLocaleString('pt-PT', { minimumFractionDigits: 2 })}`;
+                }
+            }),
+            plugins: [endLabels(index)]
+        });
+
+        // what the 75% rule costs, against what updating late costs
+        fill({
+            'drag-year': pathEnd.year, 'drag-total': fmt.pct(pathEnd.lossRule + pathEnd.lossTiming),
+            'drag-rule': fmt.pct(pathEnd.lossRule), 'drag-full': fmt.pct(pathEnd.full / pathEnd.actual - 1),
+            'drag-timing': fmt.pct(pathEnd.lossTiming)
+        });
+        const dragOptions = chartOptions({
+            x: { stacked: true },
+            y: { stacked: true, min: 0, ticks: { callback: v => fmt.pct(v) } },
+            tooltip: ctx => `${ctx.dataset.label}: ${fmt.pct(ctx.parsed.y)}`,
+            title: year => `VPT abaixo dos preços em ${year}`
+        });
+        dragOptions.plugins.legend.labels.pointStyle = 'rect';
+        this.replaceChart('drag', el('dragChart'), {
+            type: 'bar',
+            data: {
+                labels: homeYears.map(String),
+                datasets: [
+                    barDataset('Regra dos 75%', paths.map(r => r.lossRule), COLORS.rate),
+                    barDataset('Atualização tardia', paths.map(r => r.lossTiming), COLORS.loss)
+                ]
+            },
+            options: dragOptions
+        });
+
+        // Cl
+        const revision = this.components.location.revisions[this.components.location.revisions.length - 1];
+        const priceBase = revision.inForce - 1; // the market the revision was prepared on
+        const prices = this.indices.housePrices.years;
+        const locationYears = years.filter(y => y >= priceBase && prices[String(y)] != null);
+        const priceSeries = locationYears.map(y => 100 * prices[String(y)] / prices[String(priceBase)]);
+        const interval = this.components.location.intervalYears;
+        const due = locationYears.filter(y => y > revision.inForce && (y - revision.inForce) % interval === 0);
+        fill({
+            'location-portaria': revision.portaria, 'location-in-force': revision.inForce, 'location-base': priceBase,
+            'location-rise': fmt.pct(priceSeries[priceSeries.length - 1] / 100 - 1)
+        });
+        this.replaceChart('location', el('locationChart'), {
+            type: 'line',
+            data: {
+                labels: locationYears.map(String),
+                datasets: [
+                    lineDataset('Preços da habitação (INE)', priceSeries, COLORS.rate, { width: 2.5 }),
+                    lineDataset('Coeficientes de localização', locationYears.map(() => 100), COLORS.real, { width: 2.5, stepped: true })
+                ]
+            },
+            options: chartOptions({
+                y: { min: 0, ...indexAxis },
+                tooltip: indexTooltip,
+                title: year => Number(year) === revision.inForce ? `${year}: revisão em vigor`
+                    : due.includes(Number(year)) ? `${year}: revisão prevista na lei, não feita` : year,
+                markers: [
+                    { year: revision.inForce, text: 'revisão' },
+                    ...due.map(year => ({ year, text: 'em falta' }))
+                ]
+            }),
+            plugins: [endLabels(index), yearMarkers]
+        });
+
+        // Cv, on an example home built in 2005 (described in index.html)
+        const built = 2005;
+        const example = ageingExample(this.components, this.inflation, homeYears, { built, valuedIn });
+        const exampleEnd = example[example.length - 1];
+        fill({
+            'ageing-cv-first': example[0].cv.toLocaleString('pt-PT'), 'ageing-age-first': example[0].age,
+            'ageing-cv-last': exampleEnd.cv.toLocaleString('pt-PT'), 'ageing-age-last': exampleEnd.age,
+            'ageing-year': exampleEnd.year, 'ageing-drop': fmt.pct(1 - exampleEnd.reassessed / exampleEnd.current)
+        });
+        this.replaceChart('ageing', el('ageingChart'), {
+            type: 'line',
+            data: {
+                labels: homeYears.map(String),
+                datasets: [
+                    lineDataset('VPT atual (só atualizações)', example.map(r => r.current), COLORS.real, { width: 2.5, stepped: true }),
+                    lineDataset('VPT se reavaliada nesse ano', example.map(r => r.reassessed), COLORS.rate, { stepped: true }),
+                    pricesLine(example.map(r => r.prices))
+                ]
+            },
+            options: chartOptions({
+                y: indexAxis,
+                tooltip: indexTooltip,
+                title: year => {
+                    const row = example.find(r => r.year === Number(year));
+                    return `${year}: ${row.age} anos, Cv ${row.cv.toLocaleString('pt-PT', { minimumFractionDigits: 2 })}`;
+                }
+            }),
+            plugins: [endLabels(index)]
+        });
+
+        // rate
+        const avg = averageRate(this.municipalData, this.rates, years);
+        const avgEnd = avg[avg.length - 1];
+        const estimated = avg.filter(r => r.estimatedWeights).map(r => r.year);
+        fill({
+            'rate-last-year': avgEnd.year, 'rate-at-minimum-last': fmt.pct(avgEnd.atMinimum),
+            'rate-first-year': avg[0].year, 'rate-at-minimum-first': fmt.pct(avg[0].atMinimum),
+            'rate-estimated-years': listPt(estimated), 'rate-weights-year': estimated.length ? estimated[0] - 1 : ''
+        });
+        el('rateWeights').hidden = !estimated.length;
+        this.replaceChart('avgRate', el('avgRateChart'), {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    lineDataset('Taxa média das câmaras', avg.map(r => r.rate), COLORS.real, { width: 2.5 }),
+                    lineDataset('Taxa efetiva (AT)', split.map(r => r.effectiveRate), COLORS.rate),
+                    lineDataset('Máximo legal', years.map(y => y < 2016 ? 0.005 : 0.0045), COLORS.prices, { width: 1.5, stepped: true, dash: [6, 4] }),
+                    lineDataset('Mínimo legal', years.map(() => 0.003), COLORS.prices, { width: 1.5, dash: [2, 3] })
+                ]
+            },
+            options: chartOptions({
+                y: { suggestedMin: 0.0028, suggestedMax: 0.0052, ticks: { callback: v => fmt.rate(v) } },
+                tooltip: ctx => `${ctx.dataset.label}: ${fmt.rate(ctx.parsed.y)}`,
+                title: year => `Taxas para o IMI de ${year}`
+            }),
+            plugins: [endLabels(v => fmt.rate(v))]
+        });
+
+        fill({
+            'exempt-first': fmt.pct(first.exemptShare), 'exempt-first-year': first.year,
+            'exempt-last': fmt.pct(end.exemptShare), 'exempt-last-year': end.year
         });
     }
 
@@ -834,7 +1222,7 @@ class App {
             <a href="${url}" ${raw(attrs)} title="${title}">${label}</a>${raw(backup
                 ? html`<a class="chip-archive" href="${backup}" ${raw(attrs)} title="Cópia em web.archive.org" aria-label="Cópia de ${label} no arquivo">↺</a>`
                 : '')}</li>`;
-        const card = ({ title, publisher, text, url, linkText, years, archived }) => html`<article class="source-card">
+        const card = ({ title, publisher, text, url, linkText, years, archived, links = [] }) => html`<article class="source-card">
             <header>
                 <h3>${title}</h3>
                 <span class="source-publisher">${publisher}</span>
@@ -843,6 +1231,7 @@ class App {
             ${raw(years ? html`<ul class="year-chips">${raw(years.join(''))}</ul>
                 <p class="chip-key">Um ficheiro por ano do imposto${archived ? ' · ↺ cópia em web.archive.org' : ''}</p>` : '')}
             <a class="source-link" href="${url}" ${raw(attrs)}>${linkText} ↗</a>
+            ${raw(links.filter(l => l.url).map(l => html`<a class="source-extra" href="${l.url}" ${raw(attrs)}>${l.text}</a>`).join(''))}
         </article>`;
 
         const revenue = this.municipalData.sources.revenue;
@@ -882,6 +1271,60 @@ class App {
                 linkText: 'Consultar taxas por município'
             },
             {
+                title: 'VPT urbano',
+                publisher: 'Autoridade Tributária',
+                text: 'VPT dos prédios urbanos tributados e isentos (quadros B e C das mesmas estatísticas do IMI nacional).',
+                url: this.nationalData.source.url,
+                linkText: 'Estatísticas do Património'
+            },
+            {
+                title: 'Valor base de construção',
+                publisher: 'Diário da República',
+                text: `Valor médio de construção por m² fixado por portaria para cada ano (art. 39.º do CIMI), de ${this.components.constructionValue.years[0].portaria} a ${this.components.constructionValue.years[this.components.constructionValue.years.length - 1].portaria}.`,
+                url: this.components.constructionValue.url,
+                linkText: 'Tabela de valores e portarias',
+                links: [{ text: '↺ cópia no arquivo', url: this.components.constructionValue.backup }]
+            },
+            {
+                title: 'Atualização trienal',
+                publisher: 'Diário da República',
+                text: 'Coeficientes de desvalorização da moeda (art. 138.º do CIMI), uma portaria por atualização.',
+                url: this.components.triennialUpdates.url,
+                linkText: 'Art. 138.º do CIMI',
+                links: [{ text: '↺ cópia do art. 138.º no arquivo', url: this.components.triennialUpdates.backup }],
+                years: this.components.triennialUpdates.updates.map(u =>
+                    yearChip(u.year, u.url, u.backup, `Portaria ${u.portaria}: coeficiente de ${u.cdmYear}`)),
+                archived: this.components.triennialUpdates.updates.some(u => u.backup)
+            },
+            {
+                title: 'Custos de construção e preços da habitação',
+                publisher: 'INE',
+                text: 'Índice de custo de construção de habitação nova (indicador 0011748) e índice de preços da habitação (indicador 0014765), médias anuais.',
+                url: this.indices.housePrices.url,
+                linkText: 'Índice de preços da habitação',
+                links: [
+                    { text: 'Índice de custo de construção ↗', url: this.indices.constructionCosts.url },
+                    { text: '↺ cópia dos dados de custos de construção', url: this.indices.constructionCosts.backup },
+                    { text: '↺ cópia dos dados de preços da habitação', url: this.indices.housePrices.backup }
+                ]
+            },
+            {
+                title: 'Vetustez e localização',
+                publisher: 'Código do IMI',
+                text: `Tabela do coeficiente de vetustez (art. 44.º), revisão trienal do zonamento (art. 62.º) e o zonamento em vigor (Portaria ${this.components.location.revisions[this.components.location.revisions.length - 1].portaria}).`,
+                url: this.components.ageing.url,
+                linkText: 'Art. 44.º do CIMI',
+                links: [
+                    { text: '↺ cópia do art. 44.º', url: this.components.ageing.backup },
+                    { text: 'Art. 62.º do CIMI ↗', url: this.components.location.url },
+                    { text: '↺ cópia do art. 62.º', url: this.components.location.backup },
+                    ...this.components.location.revisions.flatMap(r => [
+                        { text: `Portaria ${r.portaria} ↗`, url: r.url },
+                        { text: `↺ cópia da Portaria ${r.portaria}`, url: r.backup }
+                    ])
+                ]
+            },
+            {
                 title: 'Inflação',
                 publisher: 'Eurostat',
                 text: 'IHPC da área do euro, variação de dezembro a dezembro (estimativa rápida de dezembro de cada ano). A mesma série da comparação de taxas de IRS.',
@@ -907,9 +1350,10 @@ function titleCase(name) {
 
 // --- Chart.js helpers ------------------------------------------------------
 
-function lineDataset(label, data, color, { width = 2, stepped = false } = {}) {
+function lineDataset(label, data, color, { width = 2, stepped = false, dash = null } = {}) {
     return {
         label, data, stepped,
+        borderDash: dash || [],
         borderColor: color,
         backgroundColor: color,
         borderWidth: width,
@@ -922,14 +1366,18 @@ function lineDataset(label, data, color, { width = 2, stepped = false } = {}) {
     };
 }
 
-function chartOptions({ y = {}, tooltip, title, legend = true, markers = [] }) {
+function barDataset(label, data, color) {
+    return { type: 'bar', label, data, backgroundColor: color, borderColor: color, borderWidth: 0, stack: 'loss', barPercentage: 0.7 };
+}
+
+function chartOptions({ y = {}, x = {}, tooltip, title, legend = true, markers = [] }) {
     return {
         responsive: true,
         maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
         layout: { padding: { right: 70, top: 4 } },
         scales: {
-            x: { grid: { display: false }, border: { color: COLORS.axis }, ticks: { color: COLORS.muted } },
+            x: { ...x, grid: { display: false }, border: { color: COLORS.axis }, ticks: { color: COLORS.muted } },
             y: {
                 ...y,
                 grid: { color: COLORS.grid },

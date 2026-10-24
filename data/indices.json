@@ -1,0 +1,49 @@
+{
+ "description": "Yearly averages of INE price indices for Portugal. Each series keeps the base INE publishes; the site rebases them.",
+ "constructionCosts": {
+  "name": "INE — Índice de custo de construção de habitação nova (base 2021), total",
+  "url": "https://www.ine.pt/xurl/indx/0011748/PT",
+  "data": "https://www.ine.pt/ine/json_indicador/pindica.jsp?op=2&varcd=0011748&Dim1=T&Dim3=T&lang=PT",
+  "backup": "https://web.archive.org/web/20261024134315/https://www.ine.pt/ine/json_indicador/pindica.jsp?op=2&varcd=0011748&Dim1=T&Dim3=T&lang=PT",
+  "updated": "2026-10-09",
+  "years": {
+   "2012": 82.64,
+   "2013": 83.71,
+   "2014": 84.27,
+   "2015": 85.3,
+   "2016": 86.33,
+   "2017": 87.89,
+   "2018": 89.89,
+   "2019": 91.99,
+   "2020": 93.88,
+   "2021": 100.0,
+   "2022": 112.16,
+   "2023": 116.52,
+   "2024": 120.41,
+   "2025": 125.25
+  }
+ },
+ "housePrices": {
+  "name": "INE — Índice de preços da habitação (base 2025), total",
+  "url": "https://www.ine.pt/xurl/indx/0014765/PT",
+  "data": "https://www.ine.pt/ine/json_indicador/pindica.jsp?op=2&varcd=0014765&Dim1=T&Dim3=H1&lang=PT",
+  "backup": "https://web.archive.org/web/20261024134619/https://www.ine.pt/ine/json_indicador/pindica.jsp?op=2&varcd=0014765&Dim1=T&Dim3=H1&lang=PT",
+  "updated": "2026-09-22",
+  "years": {
+   "2012": 35.95,
+   "2013": 35.28,
+   "2014": 36.78,
+   "2015": 37.9,
+   "2016": 40.6,
+   "2017": 44.35,
+   "2018": 48.91,
+   "2019": 53.78,
+   "2020": 58.49,
+   "2021": 63.99,
+   "2022": 72.08,
+   "2023": 77.98,
+   "2024": 85.06,
+   "2025": 100.0
+  }
+ }
+}

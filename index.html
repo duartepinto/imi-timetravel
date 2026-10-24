@@ -121,6 +121,118 @@
             </details>
         </section>
 
+        <section class="card components">
+            <h2>Porque é que o IMI não acompanha a inflação</h2>
+            <p class="chart-note">O IMI de um prédio é o seu valor patrimonial tributário (VPT) vezes a taxa fixada pela câmara.
+            O VPT resulta de uma fórmula em que algumas peças deviam subir com o tempo. Cada peça tem um gráfico abaixo:
+            clique nela para ir até ele.</p>
+
+            <div class="formula" role="group" aria-label="Fórmula do IMI">
+                <div class="formula-row">
+                    <span class="formula-lhs">IMI</span><span class="formula-op">=</span>
+                    <a class="term term-grow" href="#part-split"><span class="term-symbol">VPT</span><span class="term-name">valor patrimonial tributário</span><span class="term-tag">calculado abaixo</span></a>
+                    <span class="formula-op">×</span>
+                    <a class="term term-policy" href="#part-rate"><span class="term-symbol">Taxa</span><span class="term-name">fixada pela câmara</span><span class="term-tag">0,3% a 0,45%</span></a>
+                    <span class="formula-op">−</span>
+                    <span class="term term-policy"><span class="term-symbol">IMI Familiar</span><span class="term-name">dedução por dependente</span><span class="term-tag">desde 2016, opcional</span></span>
+                </div>
+                <div class="formula-row">
+                    <span class="formula-lhs">VPT</span><span class="formula-op">=</span>
+                    <a class="term term-grow" href="#part-vc"><span class="term-symbol">Vc</span><span class="term-name">valor base de construção</span><span class="term-tag">portaria anual</span></a>
+                    <span class="formula-op">×</span>
+                    <span class="term term-fixed"><span class="term-symbol">A</span><span class="term-name">área</span><span class="term-tag">do prédio</span></span>
+                    <span class="formula-op">×</span>
+                    <span class="term term-fixed"><span class="term-symbol">Ca</span><span class="term-name">afetação</span><span class="term-tag">tabela fixa</span></span>
+                    <span class="formula-op">×</span>
+                    <a class="term term-grow" href="#part-location"><span class="term-symbol">Cl</span><span class="term-name">localização</span><span class="term-tag">revisão de 3 em 3 anos</span></a>
+                    <span class="formula-op">×</span>
+                    <span class="term term-fixed"><span class="term-symbol">Cq</span><span class="term-name">qualidade e conforto</span><span class="term-tag">tabela da lei</span></span>
+                    <span class="formula-op">×</span>
+                    <a class="term term-fall" href="#part-ageing"><span class="term-symbol">Cv</span><span class="term-name">vetustez</span><span class="term-tag">desce com a idade</span></a>
+                </div>
+                <div class="formula-row">
+                    <span class="formula-lhs formula-lhs-small">de 3 em 3 anos</span><span class="formula-op">→</span>
+                    <span class="formula-text">VPT ×</span>
+                    <a class="term term-grow" href="#part-triennial"><span class="term-symbol">(1 + 75% × (CDM − 1))</span><span class="term-name">atualização trienal</span><span class="term-tag">75% do coeficiente de inflação</span></a>
+                </div>
+                <ul class="formula-legend">
+                    <li><span class="swatch term-grow"></span>devia subir com o tempo</li>
+                    <li><span class="swatch term-fall"></span>desce com o tempo</li>
+                    <li><span class="swatch term-policy"></span>escolha da câmara</li>
+                    <li><span class="swatch term-fixed"></span>não muda com o tempo</li>
+                </ul>
+            </div>
+
+            <h3 id="part-split">IMI = VPT × taxa</h3>
+            <div id="componentsStats" class="stat-row"></div>
+            <p class="chart-note">Valores nacionais da Autoridade Tributária, com <span data-first-year></span> = 100. VPT médio dos prédios
+            urbanos tributados; taxa efetiva = coleta ÷ VPT tributado (já com o IMI Familiar e outras deduções). <strong>Quanto mais uma linha
+            fica abaixo da dos preços, mais esse fator perdeu para a inflação.</strong></p>
+            <div class="chart-box chart-box-tall"><canvas id="componentsChart" role="img" aria-label="IMI, VPT, taxa efetiva e preços, em índice"></canvas></div>
+
+            <div class="chart-grid">
+                <div class="chart-cell" id="part-vc">
+                    <h3>Vc: valor base de construção</h3>
+                    <p class="chart-note">O valor por m² de onde parte o VPT. Passou de <span data-value="vc-first"></span> em <span data-value="vc-first-year"></span>
+                    para <span data-value="vc-last"></span> em <span data-value="vc-last-year"></span> <span id="vcLatest">(<span data-value="vc-latest"></span> em <span data-value="vc-latest-year"></span>)</span>. Se tivesse acompanhado os custos
+                    de construção seria <span data-value="vc-costs"></span>; com a inflação, <span data-value="vc-prices"></span>. Só conta para prédios novos ou reavaliados.
+                    <span data-value="vc-first-year"></span> = 100. <strong>Quanto mais o Vc fica abaixo dos custos de construção, mais barata a casa nova
+                    sai às Finanças e menor o IMI.</strong></p>
+                    <div class="chart-box"><canvas id="vcChart" role="img" aria-label="Valor base de construção, custos de construção e preços"></canvas></div>
+                </div>
+                <div class="chart-cell" id="part-triennial">
+                    <h3>Atualização trienal (art. 138.º)</h3>
+                    <p class="chart-note">Uma casa avaliada em 2012, o ano da avaliação geral, foi atualizada em
+                    <span data-value="triennial-years"></span>, com os coeficientes <span data-value="triennial-coefficients"></span>. A casa recebe 75% de cada subida. Com a
+                    inflação baixa, os coeficientes ficaram perto de 1 até a inflação de 2022 chegar às tabelas. 2012 = 100.
+                    <strong>Quanto mais a linha azul fica abaixo dos preços, maior o desconto real no IMI.</strong></p>
+                    <div class="chart-box"><canvas id="triennialChart" role="img" aria-label="VPT de uma casa avaliada em 2012, com 75% e 100% do coeficiente, e preços"></canvas></div>
+                </div>
+                <div class="chart-cell">
+                    <h3>Quanto custam os 75%</h3>
+                    <p class="chart-note">Quanto falta ao VPT dessa casa para acompanhar os preços, dividido em duas partes.
+                    Em <span data-value="drag-year"></span>, faltam <span data-value="drag-total"></span>: <span data-value="drag-rule"></span> por contar só 75% do coeficiente (com 100%, o VPT
+                    seria <span data-value="drag-full"></span> mais alto) e <span data-value="drag-timing"></span> por a atualização chegar tarde: só de 3 em 3 anos, com o
+                    coeficiente do ano da avaliação anterior, que é medido pelo IPC sem habitação e não pelo IHPC usado no resto do site.
+                    <strong>Quanto mais antiga a avaliação da casa, mais inflação fica por atualizar e maior o desconto no IMI.</strong></p>
+                    <div class="chart-box"><canvas id="dragChart" role="img" aria-label="Perda do VPT face aos preços, dividida entre a regra dos 75% e a atualização tardia"></canvas></div>
+                </div>
+                <div class="chart-cell" id="part-location">
+                    <h3>Cl: coeficientes de localização</h3>
+                    <p class="chart-note">Cada zona tem um coeficiente entre 0,4 e 3,5, que a lei manda rever de 3 em 3 anos.
+                    A última revisão (Portaria <span data-value="location-portaria"></span>) está em vigor desde <span data-value="location-in-force"></span>; desde
+                    <span data-value="location-base"></span>, os preços das casas subiram <span data-value="location-rise"></span> (INE). Os novos coeficientes só se aplicam a
+                    prédios avaliados depois. <span data-value="location-base"></span> = 100. <strong>Quanto mais os preços sobem sem rever as zonas, maior o
+                    desconto no IMI de quem tem casa numa zona que valorizou.</strong></p>
+                    <div class="chart-box"><canvas id="locationChart" role="img" aria-label="Preços da habitação desde a última revisão dos coeficientes de localização"></canvas></div>
+                </div>
+                <div class="chart-cell" id="part-ageing">
+                    <h3>Cv: vetustez (exemplo)</h3>
+                    <p class="chart-note">Exemplo: uma casa construída em 2005 e avaliada em 2012. As atualizações trienais não
+                    mexem no Cv, mas uma nova avaliação usa a idade da casa nesse ano (Cv de <span data-value="ageing-cv-first"></span> aos
+                    <span data-value="ageing-age-first"></span> anos, <span data-value="ageing-cv-last"></span> aos <span data-value="ageing-age-last"></span>) e o Vc desse ano. Em
+                    <span data-value="ageing-year"></span>, reavaliá-la baixaria o VPT <span data-value="ageing-drop"></span>, por isso muitos proprietários pedem a reavaliação.
+                    Tudo o resto fica igual. 2012 = 100. <strong>Quanto mais antiga for a casa, menor o valor.</strong></p>
+                    <div class="chart-box"><canvas id="ageingChart" role="img" aria-label="VPT de uma casa de exemplo, com e sem reavaliação"></canvas></div>
+                </div>
+                <div class="chart-cell" id="part-rate">
+                    <h3>Taxa</h3>
+                    <p class="chart-note">Média das taxas fixadas pelas câmaras, pesada pela base tributável de cada uma, ao
+                    lado da taxa efetiva da AT. Em <span data-value="rate-last-year"></span>, <span data-value="rate-at-minimum-last"></span> dos municípios cobravam o mínimo de
+                    0,3% (<span data-value="rate-at-minimum-first"></span> em <span data-value="rate-first-year"></span>). O máximo desceu de 0,5% para 0,45% em 2016.
+                    <span id="rateWeights" hidden>Em <span data-value="rate-estimated-years"></span>, os pesos são os de <span data-value="rate-weights-year"></span>.</span>
+                    <strong>Quanto mais baixa a taxa, menor o IMI.</strong></p>
+                    <div class="chart-box"><canvas id="avgRateChart" role="img" aria-label="Taxa média fixada pelas câmaras e taxa efetiva"></canvas></div>
+                </div>
+            </div>
+            <p class="chart-note components-closing"><strong>O que fica de fora.</strong> A área (A) e a afetação (Ca) não mudam com o tempo,
+            e a qualidade e conforto (Cq) é uma tabela de majorações e minorações que não segue os preços (a última
+            alteração foi em 2016) e, como o Vc, só conta quando o prédio é avaliado. Os três só mudam a média pela mistura
+            de prédios novos e antigos. As isenções
+            puxam o IMI no sentido contrário: a parte isenta do VPT urbano desceu de <span data-value="exempt-first"></span> em <span data-value="exempt-first-year"></span>
+            para <span data-value="exempt-last"></span> em <span data-value="exempt-last-year"></span>.</p>
+        </section>
+
         <section class="card methodology">
             <h2>Metodologia</h2>
             <p><strong>Ano do imposto.</strong> O IMI de um ano é liquidado e pago no ano seguinte (o IMI de 2023 paga-se em 2024).
@@ -136,6 +248,21 @@
             A estimativa do INE termina em 2022; o valor de <span data-last-municipal-year></span> é extrapolado com o crescimento do
             ano anterior e marcado com ⚠️. O valor do INE para 2020 destoa dos anos vizinhos (2019 e 2021 batem com os Censos 2021,
             2020 afasta-se e volta, até 14% num município), por isso usa-se a média de 2019 e 2021.</p>
+            <p><strong>IMI = VPT × taxa.</strong> A Autoridade Tributária publica, para o país, o VPT total dos prédios urbanos
+            tributados e isentos. O VPT por prédio é o VPT tributado a dividir pelos prédios tributados; a taxa efetiva é a coleta a
+            dividir pelo VPT tributado, e por isso já inclui o IMI Familiar e outras deduções. O produto dos dois é exatamente o IMI
+            médio por prédio do gráfico do topo. A taxa média das câmaras pesa cada município pela sua base tributável (receita de
+            IMI ÷ taxa); nos anos sem contas da DGAL usam-se os pesos do último ano com contas.</p>
+            <p><strong>Atualização trienal.</strong> Pelo art. 138.º do CIMI, o VPT é multiplicado de 3 em 3 anos pelo coeficiente
+            de desvalorização da moeda (CDM) do ano da última avaliação ou atualização, tirado da portaria anual dos coeficientes do IRS e do IRC. Os prédios
+            de habitação recebem 75% da subida; comércio, indústria e serviços recebem tudo. O exemplo segue uma casa avaliada em
+            2012, o ano da avaliação geral, e os coeficientes que lhe couberam. A perda face aos preços divide-se em duas partes
+            que somam o total: a regra dos 75% (diferença entre 100% e 75% do coeficiente) e a atualização tardia (diferença entre
+            100% do coeficiente e a inflação do IHPC).</p>
+            <p><strong>Vc, Cl e Cv.</strong> O valor base de construção é 125% do valor médio de construção por m² fixado por portaria
+            para cada ano. Compara-se com o índice de custos de construção de habitação nova e o índice de preços da habitação do INE
+            (médias anuais). O exemplo do Cv aplica a tabela do art. 44.º a uma casa construída em 2005 e mantém iguais a área, a
+            localização e os outros coeficientes.</p>
             <p><strong>IMI e IMT.</strong> A comparação entre os dois impostos usa o ano em que a receita entrou nas câmaras
             (DGAL, receita cobrada líquida), e não o ano do imposto, porque o IMT se paga no momento da compra. Cada valor é
             convertido para euros de <span data-target-year></span> a partir desse ano.</p>

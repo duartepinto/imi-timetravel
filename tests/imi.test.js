@@ -16,13 +16,15 @@ const read = (f) => JSON.parse(fs.readFileSync(path.join(ROOT, 'data', f), 'utf8
 const app = {};
 vm.createContext(app);
 vm.runInContext(fs.readFileSync(path.join(ROOT, 'script.js'), 'utf8') +
-    '\n;Object.assign(this, { FIRST_YEAR, SMALL_MUNICIPALITY, METRICS, inflationRate, inflationFactor, paymentYear, toReal, countValue, nationalSeries, aggregate, seriesFromYears, metricChange, ranking, changeClass, slugify, rateSeries, revenueByReceiptYear });', app);
+    '\n;Object.assign(this, { FIRST_YEAR, SMALL_MUNICIPALITY, METRICS, inflationRate, inflationFactor, paymentYear, toReal, countValue, nationalSeries, aggregate, seriesFromYears, metricChange, ranking, changeClass, slugify, rateSeries, revenueByReceiptYear, priceIndex, decomposition, constructionValueSeries, triennialPaths, ageingCoefficient, ageingExample, averageRate });', app);
 
 const inflation = read('inflation_pt.json');
 const national = read('national.json');
 const municipal = read('municipalities.json');
 const rates = read('rates.json');
 const map = read('map.json');
+const components = read('vpt_components.json');
+const indices = read('indices.json');
 
 const close = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} != ${b}`);
 
@@ -220,6 +222,116 @@ test('rates exist for every municipality and stay within the legal range', () =>
             assert.ok(row.urban >= lo - 1e-9 && row.urban <= hi + 1e-9, `${m.name} ${year}: ${row.urban}`);
         }
         assert.ok(app.rateSeries(rates, code).length >= 10, m.name);
+    }
+});
+
+// --- what IMI is made of --------------------------------------------------
+
+const nationalYears = national.years.map(r => r.year);
+
+test('every national year has the taxed and exempt urban VPT', () => {
+    for (const row of national.years) {
+        assert.ok(row.taxedVpt > 3e11 && row.taxedVpt < 7e11, `${row.year} taxed VPT`);
+        assert.ok(row.exemptVpt > 7e10 && row.exemptVpt < 1.3e11, `${row.year} exempt VPT`);
+    }
+});
+
+test('IMI per property is VPT per property times the effective rate', () => {
+    const rows = app.decomposition(national, inflation);
+    for (const key of ['imi', 'vpt', 'rate', 'prices']) close(rows[0][key], 100);
+    for (const r of rows) close(r.imi, r.vpt * r.rate / 100, 1e-9);
+    close(rows[0].effectiveRate, 1490096000 / 407322363000);
+    const last = rows[rows.length - 1];
+    close(last.prices / 100, app.inflationFactor(inflation, app.FIRST_YEAR + 1, last.year + 1));
+});
+
+test('construction values: one per year, Vc is 125% of the average', () => {
+    const years = components.constructionValue.years;
+    years.forEach((r, i) => {
+        assert.equal(r.year, years[0].year + i, 'no gaps');
+        close(r.base, r.average * 1.25, 1e-6);
+        assert.ok(r.portaria, `${r.year} portaria`);
+    });
+    assert.ok(years[0].year <= 2012 && years[years.length - 1].year >= nationalYears[nationalYears.length - 1]);
+    const series = app.constructionValueSeries(components, indices, inflation, nationalYears);
+    close(series[0].vcIndex, 100);
+    close(series[0].costs, 100);
+    assert.equal(series.find(r => r.year === 2018).vc, 603);
+});
+
+test('triennial updates cite a portaria and never lower the VPT', () => {
+    for (const u of components.triennialUpdates.updates) {
+        assert.ok(u.coefficient >= 1, `${u.year}`);
+        assert.equal(u.cdmYear, u.year - 3);
+        assert.match(u.url, /^https:\/\//);
+    }
+    assert.equal(components.triennialUpdates.housingShare, 0.75);
+});
+
+test('a home valued in 2012 is updated in 2015, 2018, 2021 and 2024 at 75%', () => {
+    const rows = app.triennialPaths(components, inflation, [2012, ...nationalYears]);
+    assert.deepEqual(rows.filter(r => r.coefficient !== null).map(r => r.year), [2015, 2018, 2021, 2024]);
+    const before = rows.find(r => r.year === 2023), after = rows.find(r => r.year === 2024);
+    close(after.actual / before.actual, 1.0975, 1e-9); // 75% of +13%
+    close(after.full / before.full, 1.13, 1e-9);
+    for (const r of rows) {
+        assert.ok(r.actual <= r.full);
+        close(r.lossRule + r.lossTiming, 1 - r.actual / r.prices, 1e-12);
+    }
+});
+
+test('ageing coefficients fall with age, and the example only moves with Vc or Cv', () => {
+    const cvs = components.ageing.brackets.map(b => b.cv);
+    cvs.forEach((cv, i) => i && assert.ok(cv < cvs[i - 1]));
+    assert.equal(app.ageingCoefficient(components, 1), 1);
+    assert.equal(app.ageingCoefficient(components, 2), 0.9);
+    assert.equal(app.ageingCoefficient(components, 61), 0.4);
+    const rows = app.ageingExample(components, inflation, [2012, ...nationalYears], { built: 2005, valuedIn: 2012 });
+    close(rows[0].current, 100);
+    close(rows[0].reassessed, 100);
+    rows.forEach((r, i) => {
+        if (!i) return;
+        const prev = rows[i - 1];
+        const vcChanged = components.constructionValue.years.find(x => x.year === r.year).base !==
+            components.constructionValue.years.find(x => x.year === prev.year).base;
+        if (!vcChanged && r.cv === prev.cv) close(r.reassessed, prev.reassessed);
+    });
+});
+
+test('average municipal rate stays within the legal range', () => {
+    const rows = app.averageRate(municipal, rates, nationalYears);
+    for (const r of rows) {
+        assert.ok(r.rate >= 0.003 && r.rate <= 0.005, `${r.year}: ${r.rate}`);
+        assert.ok(r.atMinimum > 0 && r.atMinimum < 1);
+    }
+    assert.ok(rows[rows.length - 1].rate < rows[0].rate, 'rates fell');
+    assert.ok(rows.some(r => r.estimatedWeights), 'years past the accounts reuse the last weights');
+});
+
+test('INE indices cover every year of the national series', () => {
+    for (const key of ['constructionCosts', 'housePrices']) {
+        for (const y of nationalYears) assert.ok(indices[key].years[String(y)] > 0, `${key} ${y}`);
+        assert.match(indices[key].url, /^https:\/\/www\.ine\.pt\//);
+    }
+});
+
+// --- sources -----------------------------------------------------------------
+
+// Content is checked against the archive by scripts/archive_sources.py; here
+// only the shape: a Wayback snapshot of exactly the cited URL.
+test('every cited source has an Internet Archive backup of that same URL', () => {
+    const entries = [
+        ...national.years.map(r => [r.source.url, r.source.backup]),
+        ...['constructionValue', 'triennialUpdates', 'ageing', 'location'].map(k => [components[k].url, components[k].backup]),
+        ...components.triennialUpdates.updates.map(u => [u.url, u.backup]),
+        ...components.location.revisions.map(r => [r.url, r.backup]),
+        ...['constructionCosts', 'housePrices'].map(k => [indices[k].data, indices[k].backup])
+    ];
+    for (const [url, backup] of entries) {
+        assert.ok(backup, `no backup for ${url}`);
+        const m = backup.match(/^https:\/\/web\.archive\.org\/web\/(\d{14})\/(.+)$/);
+        assert.ok(m, `not a Wayback snapshot: ${backup}`);
+        assert.equal(m[2], url);
     }
 });
 
