@@ -16,7 +16,7 @@ const read = (f) => JSON.parse(fs.readFileSync(path.join(ROOT, 'data', f), 'utf8
 const app = {};
 vm.createContext(app);
 vm.runInContext(fs.readFileSync(path.join(ROOT, 'script.js'), 'utf8') +
-    '\n;Object.assign(this, { FIRST_YEAR, SMALL_MUNICIPALITY, METRICS, inflationRate, inflationFactor, paymentYear, toReal, countValue, nationalSeries, aggregate, seriesFromYears, metricChange, ranking, changeClass, slugify, rateSeries, revenueByReceiptYear, priceIndex, decomposition, constructionValueSeries, triennialPaths, ageingCoefficient, ageingExample, averageRate, familiarSeries, familiarLabel });', app);
+    '\n;Object.assign(this, { FIRST_YEAR, SMALL_MUNICIPALITY, METRICS, inflationRate, inflationFactor, paymentYear, toReal, countValue, nationalSeries, aggregate, seriesFromYears, metricChange, ranking, changeClass, slugify, rateSeries, revenueByReceiptYear, priceIndex, decomposition, constructionValueSeries, triennialPaths, ageingCoefficient, ageingExample, averageRate, familiarSeries, familiarLabel, familiarWeight });', app);
 
 const inflation = read('inflation_pt.json');
 const national = read('national.json');
@@ -352,6 +352,16 @@ test('IMI Familiar labels per municipality and year', () => {
     const lisboa = app.rateSeries(rates, '1106');
     assert.equal(app.familiarLabel(lisboa.find(r => r.year === 2025).familiar), '30 / 70 / 140 €');
     assert.equal(lisboa.find(r => r.year === 2013).familiar, null);
+});
+
+test('IMI Familiar as a share of the average IMI bill', () => {
+    const weight = app.familiarWeight(app.familiarSeries(rates, municipal, nationalYears), national);
+    const row = y => weight.find(r => r.year === y);
+    const bill = y => { const n = national.years.find(r => r.year === y); return n.collected / n.taxedProperties; };
+    close(row(2015)['3+'], 0.2);              // a 20% rate cut is 20% of the bill
+    close(row(2016)['3+'], 70 / bill(2016));
+    close(row(2025)['1'], 30 / bill(2025));
+    assert.equal(weight[0].year, 2015);
 });
 
 // --- sources -----------------------------------------------------------------

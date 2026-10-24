@@ -13,7 +13,7 @@ A sister project of `tabelas-irs-timetravel`, built the same way: a static site 
   - IMI per dwelling, at today's prices;
   - IMI per dwelling, in euros of the time.
 - **Municipality detail.** Key figures, IMI per dwelling against the district and the country, IMI vs IMT, IMI's share of current revenue, and the IMI rate history, including rates set per freguesia where they exist.
-- **Why IMI lags inflation.** The IMI formula, with each part of the VPT, then the national split IMI = VPT × effective rate (since 2013 the average VPT rose about 21% and the effective rate fell about 11%, while prices rose 31%). Each part that should grow over time has its own chart: the construction value Vc against construction costs, the three-yearly update (only 75% of the inflation coefficient for housing, and late), the location coefficients against house prices, an ageing (Cv) example, the average municipal rate, and IMI Familiar: how many municipalities apply it, and its amounts against inflation.
+- **Why IMI lags inflation.** The IMI formula, with each part of the VPT, then the national split IMI = VPT × effective rate (since 2013 the average VPT rose about 21% and the effective rate fell about 11%, while prices rose 31%). Each part that should grow over time has its own chart: the construction value Vc against construction costs, the three-yearly update (only 75% of the inflation coefficient for housing, and late), the location coefficients against house prices, an ageing (Cv) example, the average municipal rate, and IMI Familiar: how many municipalities apply it, its amounts against inflation, and how much of the average IMI bill it cancels.
 
 Every view can be linked to: `#/porto/gondomar`.
 

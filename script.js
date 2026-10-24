@@ -386,6 +386,17 @@ function familiarSeries(rates, municipalData, years) {
     });
 }
 
+// How much of the average IMI bill (AT: IMI collected per taxed urban
+// property) the usual IMI Familiar cancels, per number of dependents. A rate
+// cut (2015) cuts the bill by the same share.
+function familiarWeight(familiar, national) {
+    const bills = Object.fromEntries(national.years.map(r => [r.year, r.collected / r.taxedProperties]));
+    return familiar.filter(r => r.amounts && bills[r.year]).map(r => {
+        const share = k => r.amounts[k] == null ? null : r.type === 'reduction' ? r.amounts[k] : r.amounts[k] / bills[r.year];
+        return { year: r.year, bill: bills[r.year], amounts: r.amounts, type: r.type, '1': share('1'), '2': share('2'), '3+': share('3+') };
+    });
+}
+
 // ===========================================================================
 // UI
 // ===========================================================================
@@ -846,6 +857,34 @@ class App {
             },
             options: amountOptions,
             plugins: [endLabels(v => fmt.euro(v))]
+        });
+
+        // how much of the average bill it cancels
+        const weight = familiarWeight(familiar, this.nationalData);
+        const wFirst = weight.find(r => r.type === 'deduction'), wLast = weight[weight.length - 1];
+        fill({
+            'weight-first-year': wFirst.year, 'weight-amount-first': wFirst.amounts['3+'], 'weight-share-first': fmt.pct(wFirst['3+']),
+            'weight-bill-first': fmt.euro(wFirst.bill),
+            'weight-last-year': wLast.year, 'weight-amount-last': wLast.amounts['3+'], 'weight-share-last': fmt.pct(wLast['3+']),
+            'weight-bill-last': fmt.euro(wLast.bill)
+        });
+        this.replaceChart('familiarWeight', el('familiarWeightChart'), {
+            type: 'line',
+            data: {
+                labels: weight.map(r => String(r.year)),
+                datasets: dependents.map(([k, label, color]) => lineDataset(label, weight.map(r => r[k]), color, { width: 2.5 }))
+            },
+            options: chartOptions({
+                y: { min: 0, ticks: { callback: v => fmt.pct(v) } },
+                tooltip: ctx => {
+                    const row = weight[ctx.dataIndex];
+                    const key = dependents[ctx.datasetIndex][0];
+                    const amount = row.type === 'reduction' ? 'redução da taxa' : `${row.amounts[key]} € de ${fmt.euro(row.bill)}`;
+                    return `${ctx.dataset.label}: ${fmt.pct(ctx.parsed.y)} (${amount})`;
+                },
+                title: year => `IMI de ${year}`
+            }),
+            plugins: [endLabels(v => fmt.pct(v))]
         });
 
         fill({
