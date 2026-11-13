@@ -16,7 +16,7 @@ const read = (f) => JSON.parse(fs.readFileSync(path.join(ROOT, 'data', f), 'utf8
 const app = {};
 vm.createContext(app);
 vm.runInContext(fs.readFileSync(path.join(ROOT, 'script.js'), 'utf8') +
-    '\n;Object.assign(this, { FIRST_YEAR, SMALL_MUNICIPALITY, METRICS, inflationRate, inflationFactor, paymentYear, toReal, countValue, nationalSeries, aggregate, seriesFromYears, metricChange, ranking, changeClass, slugify, rateSeries, revenueByReceiptYear, priceIndex, decomposition, constructionValueSeries, triennialPaths, ageingCoefficient, ageingExample, averageRate, familiarSeries, familiarLabel, familiarWeight });', app);
+    '\n;Object.assign(this, { FIRST_YEAR, SMALL_MUNICIPALITY, METRICS, inflationRate, inflationFactor, paymentYear, toReal, countValue, nationalSeries, aggregate, seriesFromYears, metricChange, ranking, changeClass, slugify, rateSeries, revenueByReceiptYear, priceIndex, decomposition, constructionValueSeries, triennialPaths, ageingCoefficient, ageingExample, averageRate, familiarSeries, familiarLabel, familiarWeight, detectLanguage, LANG });', app);
 
 const inflation = read('inflation_pt.json');
 const national = read('national.json');
@@ -362,6 +362,52 @@ test('IMI Familiar as a share of the average IMI bill', () => {
     close(row(2016)['3+'], 70 / bill(2016));
     close(row(2025)['1'], 30 / bill(2025));
     assert.equal(weight[0].year, 2015);
+});
+
+// --- language ----------------------------------------------------------------
+
+test('Portuguese unless neither the browser language nor the time zone is Portuguese', () => {
+    const lang = o => app.detectLanguage(o);
+    assert.equal(lang({ languages: ['en-US'], timeZone: 'America/New_York' }), 'en');
+    assert.equal(lang({ languages: ['pt-PT'], timeZone: 'America/New_York' }), 'pt');
+    assert.equal(lang({ languages: ['pt-BR', 'en'], timeZone: 'Europe/Berlin' }), 'pt');
+    assert.equal(lang({ languages: ['en-GB', 'pt'], timeZone: 'Europe/London' }), 'pt');
+    assert.equal(lang({ languages: ['en-GB'], timeZone: 'Europe/Lisbon' }), 'pt');
+    assert.equal(lang({ languages: ['en-GB'], timeZone: 'Atlantic/Azores' }), 'pt');
+    assert.equal(lang({ languages: ['en-US'], timeZone: 'America/Sao_Paulo' }), 'pt');
+    assert.equal(lang({ languages: ['fr'], timeZone: 'Africa/Luanda' }), 'pt');
+    assert.equal(lang({ languages: ['es-ES'], timeZone: 'Europe/Madrid' }), 'en');
+    assert.equal(lang({}), 'en');
+    // an explicit choice wins: ?lang= first, then the one remembered from the switch
+    assert.equal(lang({ param: 'en', languages: ['pt-PT'], timeZone: 'Europe/Lisbon' }), 'en');
+    assert.equal(lang({ stored: 'pt', languages: ['en-US'], timeZone: 'America/New_York' }), 'pt');
+    assert.equal(lang({ param: 'pt', stored: 'en' }), 'pt');
+    assert.equal(lang({ param: 'fr', languages: ['en'] }), 'en');
+    // without a document (these tests) the strings are Portuguese
+    assert.equal(app.LANG, 'pt');
+});
+
+test('index.html has every passage in both languages', () => {
+    const page = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+    const count = re => (page.match(re) || []).length;
+    assert.equal(count(/data-lang="pt"/g), count(/data-lang="en"/g));
+    // Each data-value / data-show / year placeholder appears as often in the
+    // English copies as in the Portuguese ones.
+    const inner = lang => [...page.matchAll(new RegExp(`<(\\w+)[^>]*data-lang="${lang}"[^>]*>`, 'g'))].map(m => {
+        const tag = new RegExp(`<(/?)${m[1]}\\b[^>]*>`, 'g');
+        tag.lastIndex = m.index + m[0].length;
+        for (let depth = 1, t; (t = tag.exec(page));) {
+            depth += t[1] ? -1 : 1;
+            if (depth === 0) return page.slice(m.index + m[0].length, t.index);
+        }
+        throw new Error(`unclosed ${m[0]}`);
+    });
+    const placeholders = lang => inner(lang).flatMap(text =>
+        [...text.matchAll(/data-(?:value|show)="([^"]+)"|data-(first-year|target-year|last-municipal-year|small-threshold)/g)].map(x => x[1] || x[2])).sort();
+    assert.ok(placeholders('pt').length > 50);
+    assert.deepEqual(placeholders('en'), placeholders('pt'));
+    // and every element with data-en has some English
+    for (const m of page.matchAll(/data-en(?:-[a-z-]+)?="([^"]*)"/g)) assert.ok(m[1].trim(), m[0]);
 });
 
 // --- sources -----------------------------------------------------------------

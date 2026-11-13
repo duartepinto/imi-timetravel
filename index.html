@@ -3,10 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IMI em Portugal ao Longo do Tempo (Ajustado à Inflação)</title>
-    <meta name="description" content="Como mudou o IMI em Portugal desde 2013, por distrito e município, comparado com a inflação.">
+    <!-- Text is in Portuguese, with English alongside: data-en / data-en-<attribute> on
+         elements that hold only text, two copies (data-lang="pt" / data-lang="en") where
+         the text has numbers or markup inside. script.js picks the language. -->
+    <title data-en="IMI in Portugal Over Time (Adjusted for Inflation)">IMI em Portugal ao Longo do Tempo (Ajustado à Inflação)</title>
+    <meta name="description" content="Como mudou o IMI em Portugal desde 2013, por distrito e município, comparado com a inflação."
+          data-en-content="How Portugal's municipal property tax (IMI) has changed since 2013, by district and municipality, compared with inflation.">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- In the head so the language is set before the page is drawn. -->
+    <script src="script.js"></script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-MVV485Z5JX"></script>
     <script>
@@ -19,8 +25,13 @@
 </head>
 <body>
     <header>
-        <h1>IMI em Portugal ao Longo do Tempo</h1>
-        <p>O Imposto Municipal sobre Imóveis desde <span data-first-year>2013</span>, comparado com a inflação</p>
+        <nav class="lang-switch" aria-label="Idioma" data-en-aria-label="Language">
+            <a href="?lang=pt" hreflang="pt" lang="pt" data-set-lang="pt" title="Português">PT</a>
+            <a href="?lang=en" hreflang="en" lang="en" data-set-lang="en" title="English">EN</a>
+        </nav>
+        <h1 data-en="IMI in Portugal Over Time">IMI em Portugal ao Longo do Tempo</h1>
+        <p data-lang="pt">O Imposto Municipal sobre Imóveis desde <span data-first-year>2013</span>, comparado com a inflação</p>
+        <p data-lang="en">Portugal's municipal property tax since <span data-first-year>2013</span>, compared with inflation</p>
         <a href="https://coff.ee/duartepinto" target="_blank" class="coffee-button">
             <span class="coffee-icon">☕</span>
             Buy me a coffee
@@ -28,61 +39,64 @@
     </header>
 
     <main>
-        <p id="loadError" class="load-error" hidden>Não foi possível carregar os dados. Tente recarregar a página.</p>
+        <p id="loadError" class="load-error" hidden data-en="The data could not be loaded. Try reloading the page.">Não foi possível carregar os dados. Tente recarregar a página.</p>
 
         <section class="card overview">
             <div id="headline" class="headline"></div>
-            <h2>IMI médio por prédio urbano</h2>
-            <p class="chart-note">Coleta de IMI dos prédios urbanos a dividir pelo número de prédios urbanos tributados,
+            <h2 data-en="Average IMI per urban property">IMI médio por prédio urbano</h2>
+            <p class="chart-note" data-lang="pt">Coleta de IMI dos prédios urbanos a dividir pelo número de prédios urbanos tributados,
             por ano do imposto. A linha azul converte cada ano para euros de <span data-target-year></span>.</p>
-            <div class="chart-box chart-box-tall"><canvas id="nationalChart" aria-label="Gráfico do IMI médio por prédio urbano, nominal e real" role="img"></canvas></div>
+            <p class="chart-note" data-lang="en">IMI collected on urban properties divided by the number of taxed urban properties,
+            by tax year. The blue line converts each year to euros of <span data-target-year></span>.</p>
+            <div class="chart-box chart-box-tall"><canvas id="nationalChart" aria-label="Gráfico do IMI médio por prédio urbano, nominal e real" data-en-aria-label="Chart of the average IMI per urban property, nominal and real" role="img"></canvas></div>
         </section>
 
         <section class="card revenue">
             <div class="section-head">
-                <h2>Receita das câmaras: IMI e IMT</h2>
-                <div id="revenueMode" class="segmented" role="group" aria-label="Valores">
-                    <button type="button" data-mode="real" aria-pressed="true">A preços de <span data-target-year></span></button>
-                    <button type="button" data-mode="nominal" aria-pressed="false">Euros da altura</button>
+                <h2 data-en="Municipal revenue: IMI and IMT">Receita das câmaras: IMI e IMT</h2>
+                <div id="revenueMode" class="segmented" role="group" aria-label="Valores" data-en-aria-label="Values">
+                    <button type="button" data-mode="real" aria-pressed="true"><span data-lang="pt">A preços de <span data-target-year></span></span><span data-lang="en">At <span data-target-year></span> prices</span></button>
+                    <button type="button" data-mode="nominal" aria-pressed="false" data-en="Nominal euros">Euros da altura</button>
                 </div>
             </div>
-            <p class="chart-note">Receita total de todos os municípios, pelo ano em que entrou nos cofres. O IMI é o imposto
+            <p class="chart-note" data-en="Total revenue of all municipalities, by the year it came in. IMI is the yearly tax on owning property; IMT is paid once, when buying a property, and follows the market.">Receita total de todos os municípios, pelo ano em que entrou nos cofres. O IMI é o imposto
             anual sobre quem tem casa; o IMT paga-se uma vez, na compra de um imóvel, e acompanha o mercado.</p>
             <div id="revenueStats" class="stat-row"></div>
-            <div class="chart-box chart-box-tall"><canvas id="revenueChart" role="img" aria-label="Receita de IMI e IMT dos municípios por ano"></canvas></div>
+            <div class="chart-box chart-box-tall"><canvas id="revenueChart" role="img" aria-label="Receita de IMI e IMT dos municípios por ano" data-en-aria-label="Municipal IMI and IMT revenue by year"></canvas></div>
         </section>
 
         <section class="card explorer">
             <div class="explorer-head">
-                <h2>Por distrito e município</h2>
-                <nav id="breadcrumb" class="breadcrumb" aria-label="Localização"></nav>
+                <h2 data-en="By district and municipality">Por distrito e município</h2>
+                <nav id="breadcrumb" class="breadcrumb" aria-label="Localização" data-en-aria-label="Location"></nav>
             </div>
             <div class="controls">
                 <div class="input-group">
-                    <label for="metricSelect">Indicador</label>
+                    <label for="metricSelect" data-en="Indicator">Indicador</label>
                     <select id="metricSelect">
-                        <option value="share" selected>IMI em % das receitas correntes</option>
-                        <option value="real">IMI por alojamento, a preços de hoje</option>
-                        <option value="nominal">IMI por alojamento, em euros correntes</option>
+                        <option value="share" selected data-en="IMI as % of current revenue">IMI em % das receitas correntes</option>
+                        <option value="real" data-en="IMI per dwelling, at today's prices">IMI por alojamento, a preços de hoje</option>
+                        <option value="nominal" data-en="IMI per dwelling, in current euros">IMI por alojamento, em euros correntes</option>
                     </select>
                 </div>
                 <div class="input-group">
-                    <label for="municipalitySearch">Procurar município</label>
-                    <input id="municipalitySearch" list="municipalityOptions" placeholder="ex.: Gondomar" autocomplete="off">
+                    <label for="municipalitySearch" data-en="Find a municipality">Procurar município</label>
+                    <input id="municipalitySearch" list="municipalityOptions" placeholder="ex.: Gondomar" data-en-placeholder="e.g. Gondomar" autocomplete="off">
                     <datalist id="municipalityOptions"></datalist>
                 </div>
                 <label class="checkbox">
                     <input type="checkbox" id="excludeSmall" checked>
-                    <span>Excluir do top 3 municípios com menos de <span id="smallThreshold">3000</span> alojamentos</span>
+                    <span data-lang="pt">Excluir do top 3 municípios com menos de <span data-small-threshold>3000</span> alojamentos</span>
+                    <span data-lang="en">Leave municipalities with fewer than <span data-small-threshold>3000</span> dwellings out of the top 3</span>
                 </label>
             </div>
 
             <div class="explorer-body">
                 <div class="map-wrap">
-                    <svg id="map" role="group" aria-label="Mapa de Portugal por distrito e município"></svg>
+                    <svg id="map" role="group" aria-label="Mapa de Portugal por distrito e município" data-en-aria-label="Map of Portugal by district and municipality"></svg>
                     <div id="mapTooltip" class="map-tooltip" hidden></div>
                     <div id="mapLegend" class="map-legend"></div>
-                    <p id="mapHint" class="map-hint">Clique num distrito para ver os seus municípios.</p>
+                    <p id="mapHint" class="map-hint" data-en="Click a district to see its municipalities.">Clique num distrito para ver os seus municípios.</p>
                 </div>
                 <aside id="ranking" class="ranking" aria-live="polite"></aside>
             </div>
@@ -93,33 +107,34 @@
                     <span id="detailSubtitle" class="detail-subtitle"></span>
                 </div>
 
-                <h3>IMI por alojamento</h3>
-                <p class="chart-note">Receita de IMI do município a dividir pelo número de alojamentos familiares clássicos.
+                <h3 data-en="IMI per dwelling">IMI por alojamento</h3>
+                <p class="chart-note" data-en="The municipality's IMI revenue divided by the number of classic family dwellings. Each year's IMI is collected the following year.">Receita de IMI do município a dividir pelo número de alojamentos familiares clássicos.
                 O IMI de cada ano é cobrado no ano seguinte.</p>
-                <div class="chart-box"><canvas id="perDwellingChart" role="img" aria-label="IMI por alojamento do município, distrito e país"></canvas></div>
+                <div class="chart-box"><canvas id="perDwellingChart" role="img" aria-label="IMI por alojamento do município, distrito e país" data-en-aria-label="IMI per dwelling in the municipality, district and country"></canvas></div>
 
-                <h3>Receita de IMI e IMT</h3>
-                <p class="chart-note">Pelo ano em que a receita entrou, a preços de <span data-target-year></span>.</p>
-                <div class="chart-box"><canvas id="detailRevenueChart" role="img" aria-label="Receita de IMI e IMT do município"></canvas></div>
+                <h3 data-en="IMI and IMT revenue">Receita de IMI e IMT</h3>
+                <p class="chart-note" data-lang="pt">Pelo ano em que a receita entrou, a preços de <span data-target-year></span>.</p>
+                <p class="chart-note" data-lang="en">By the year the revenue came in, at <span data-target-year></span> prices.</p>
+                <div class="chart-box"><canvas id="detailRevenueChart" role="img" aria-label="Receita de IMI e IMT do município" data-en-aria-label="IMI and IMT revenue of the municipality"></canvas></div>
 
-                <h3>Peso do IMI nas receitas correntes</h3>
-                <div class="chart-box"><canvas id="shareChart" role="img" aria-label="IMI em percentagem das receitas correntes"></canvas></div>
+                <h3 data-en="IMI's share of current revenue">Peso do IMI nas receitas correntes</h3>
+                <div class="chart-box"><canvas id="shareChart" role="img" aria-label="IMI em percentagem das receitas correntes" data-en-aria-label="IMI as a percentage of current revenue"></canvas></div>
 
-                <h3>Taxa de IMI (prédios urbanos)</h3>
-                <p class="chart-note">Taxa fixada pelo município para cada ano do imposto, entre 0,3% e 0,45% (até 2015, o máximo era 0,5%).</p>
-                <div class="chart-box chart-box-short"><canvas id="rateChart" role="img" aria-label="Taxa de IMI ao longo dos anos"></canvas></div>
+                <h3 data-en="IMI rate (urban properties)">Taxa de IMI (prédios urbanos)</h3>
+                <p class="chart-note" data-en="Rate set by the municipality for each tax year, between 0.3% and 0.45% (until 2015 the maximum was 0.5%).">Taxa fixada pelo município para cada ano do imposto, entre 0,3% e 0,45% (até 2015, o máximo era 0,5%).</p>
+                <div class="chart-box chart-box-short"><canvas id="rateChart" role="img" aria-label="Taxa de IMI ao longo dos anos" data-en-aria-label="IMI rate over the years"></canvas></div>
                 <div id="freguesiaRates"></div>
 
                 <h3>IMI Familiar</h3>
-                <p class="chart-note">Redução do IMI da casa onde vive uma família com dependentes a cargo, quando a câmara a
+                <p class="chart-note" data-en="A cut in the IMI on the home of a family with dependents, when the municipality applies it. Amounts for 1, 2 and 3 or more dependents: in 2015 a cut in the rate, since 2016 a fixed amount deducted each year. A &quot;—&quot; is a number of dependents the municipality does not apply it to.">Redução do IMI da casa onde vive uma família com dependentes a cargo, quando a câmara a
                 aplica. Valores para 1, 2 e 3 ou mais dependentes: em 2015 uma redução da taxa, desde 2016 um valor fixo deduzido
                 por ano. Um "—" é um número de dependentes a que a câmara não a aplica.</p>
-                <ul id="familiarStrip" class="familiar-strip" aria-label="IMI Familiar por ano"></ul>
+                <ul id="familiarStrip" class="familiar-strip" aria-label="IMI Familiar por ano" data-en-aria-label="IMI Familiar by year"></ul>
             </div>
 
             <details class="table-details">
-                <summary>Ver em tabela</summary>
-                <h3 id="tableTitle">Todos os municípios</h3>
+                <summary data-en="View as a table">Ver em tabela</summary>
+                <h3 id="tableTitle" data-en="All municipalities">Todos os municípios</h3>
                 <p id="tableNote" class="chart-note"></p>
                 <div class="table-scroll">
                     <table id="municipalityTable"></table>
@@ -128,148 +143,204 @@
         </section>
 
         <section class="card components">
-            <h2>Porque é que o IMI não acompanha a inflação</h2>
-            <p class="chart-note">O IMI de um prédio é o seu valor patrimonial tributário (VPT) vezes a taxa fixada pela câmara.
+            <h2 data-en="Why IMI does not keep up with inflation">Porque é que o IMI não acompanha a inflação</h2>
+            <p class="chart-note" data-en="A property's IMI is its taxable property value (VPT) times the rate set by the municipality. The VPT comes from a formula in which some parts should rise over time. Each part has a chart below: click it to jump there.">O IMI de um prédio é o seu valor patrimonial tributário (VPT) vezes a taxa fixada pela câmara.
             O VPT resulta de uma fórmula em que algumas peças deviam subir com o tempo. Cada peça tem um gráfico abaixo:
             clique nela para ir até ele.</p>
 
-            <div class="formula" role="group" aria-label="Fórmula do IMI">
+            <div class="formula" role="group" aria-label="Fórmula do IMI" data-en-aria-label="IMI formula">
                 <div class="formula-row">
                     <span class="formula-lhs">IMI</span><span class="formula-op">=</span>
-                    <a class="term term-grow" href="#part-split"><span class="term-symbol">VPT</span><span class="term-name">valor patrimonial tributário</span><span class="term-tag">calculado abaixo</span></a>
+                    <a class="term term-grow" href="#part-split"><span class="term-symbol">VPT</span><span class="term-name" data-en="taxable property value">valor patrimonial tributário</span><span class="term-tag" data-en="calculated below">calculado abaixo</span></a>
                     <span class="formula-op">×</span>
-                    <a class="term term-policy" href="#part-rate"><span class="term-symbol">Taxa</span><span class="term-name">fixada pela câmara</span><span class="term-tag">0,3% a 0,45%</span></a>
+                    <a class="term term-policy" href="#part-rate"><span class="term-symbol" data-en="Rate">Taxa</span><span class="term-name" data-en="set by the municipality">fixada pela câmara</span><span class="term-tag" data-en="0.3% to 0.45%">0,3% a 0,45%</span></a>
                     <span class="formula-op">−</span>
-                    <a class="term term-policy" href="#part-familiar"><span class="term-symbol">IMI Familiar</span><span class="term-name">dedução por dependente</span><span class="term-tag">desde 2015, opcional</span></a>
+                    <a class="term term-policy" href="#part-familiar"><span class="term-symbol">IMI Familiar</span><span class="term-name" data-en="deduction per dependent">dedução por dependente</span><span class="term-tag" data-en="since 2015, optional">desde 2015, opcional</span></a>
                 </div>
                 <div class="formula-row">
                     <span class="formula-lhs">VPT</span><span class="formula-op">=</span>
-                    <a class="term term-grow" href="#part-vc"><span class="term-symbol">Vc</span><span class="term-name">valor base de construção</span><span class="term-tag">portaria anual</span></a>
+                    <a class="term term-grow" href="#part-vc"><span class="term-symbol">Vc</span><span class="term-name" data-en="base construction value">valor base de construção</span><span class="term-tag" data-en="set every year">portaria anual</span></a>
                     <span class="formula-op">×</span>
-                    <span class="term term-fixed"><span class="term-symbol">A</span><span class="term-name">área</span><span class="term-tag">do prédio</span></span>
+                    <span class="term term-fixed"><span class="term-symbol">A</span><span class="term-name" data-en="area">área</span><span class="term-tag" data-en="of the property">do prédio</span></span>
                     <span class="formula-op">×</span>
-                    <span class="term term-fixed"><span class="term-symbol">Ca</span><span class="term-name">afetação</span><span class="term-tag">tabela fixa</span></span>
+                    <span class="term term-fixed"><span class="term-symbol">Ca</span><span class="term-name" data-en="use">afetação</span><span class="term-tag" data-en="fixed table">tabela fixa</span></span>
                     <span class="formula-op">×</span>
-                    <a class="term term-grow" href="#part-location"><span class="term-symbol">Cl</span><span class="term-name">localização</span><span class="term-tag">revisão de 3 em 3 anos</span></a>
+                    <a class="term term-grow" href="#part-location"><span class="term-symbol">Cl</span><span class="term-name" data-en="location">localização</span><span class="term-tag" data-en="revised every 3 years">revisão de 3 em 3 anos</span></a>
                     <span class="formula-op">×</span>
-                    <span class="term term-fixed"><span class="term-symbol">Cq</span><span class="term-name">qualidade e conforto</span><span class="term-tag">tabela da lei</span></span>
+                    <span class="term term-fixed"><span class="term-symbol">Cq</span><span class="term-name" data-en="quality and comfort">qualidade e conforto</span><span class="term-tag" data-en="table in the law">tabela da lei</span></span>
                     <span class="formula-op">×</span>
-                    <a class="term term-fall" href="#part-ageing"><span class="term-symbol">Cv</span><span class="term-name">vetustez</span><span class="term-tag">desce com a idade</span></a>
+                    <a class="term term-fall" href="#part-ageing"><span class="term-symbol">Cv</span><span class="term-name" data-en="age">vetustez</span><span class="term-tag" data-en="falls with age">desce com a idade</span></a>
                 </div>
                 <div class="formula-row">
-                    <span class="formula-lhs formula-lhs-small">de 3 em 3 anos</span><span class="formula-op">→</span>
+                    <span class="formula-lhs formula-lhs-small" data-en="every 3 years">de 3 em 3 anos</span><span class="formula-op">→</span>
                     <span class="formula-text">VPT ×</span>
-                    <a class="term term-grow" href="#part-triennial"><span class="term-symbol">(1 + 75% × (CDM − 1))</span><span class="term-name">atualização trienal</span><span class="term-tag">75% do coeficiente de inflação</span></a>
+                    <a class="term term-grow" href="#part-triennial"><span class="term-symbol">(1 + 75% × (CDM − 1))</span><span class="term-name" data-en="triennial update">atualização trienal</span><span class="term-tag" data-en="75% of the inflation coefficient">75% do coeficiente de inflação</span></a>
                 </div>
                 <ul class="formula-legend">
-                    <li><span class="swatch term-grow"></span>devia subir com o tempo</li>
-                    <li><span class="swatch term-fall"></span>desce com o tempo</li>
-                    <li><span class="swatch term-policy"></span>escolha da câmara</li>
-                    <li><span class="swatch term-fixed"></span>não muda com o tempo</li>
+                    <li><span class="swatch term-grow"></span><span data-en="should rise over time">devia subir com o tempo</span></li>
+                    <li><span class="swatch term-fall"></span><span data-en="falls over time">desce com o tempo</span></li>
+                    <li><span class="swatch term-policy"></span><span data-en="the municipality's choice">escolha da câmara</span></li>
+                    <li><span class="swatch term-fixed"></span><span data-en="does not change over time">não muda com o tempo</span></li>
                 </ul>
             </div>
 
-            <h3 id="part-split">IMI = VPT × taxa</h3>
+            <h3 id="part-split" data-en="IMI = VPT × rate">IMI = VPT × taxa</h3>
             <div id="componentsStats" class="stat-row"></div>
-            <p class="chart-note">Valores nacionais da Autoridade Tributária, com <span data-first-year></span> = 100. VPT médio dos prédios
+            <p class="chart-note" data-lang="pt">Valores nacionais da Autoridade Tributária, com <span data-first-year></span> = 100. VPT médio dos prédios
             urbanos tributados; taxa efetiva = coleta ÷ VPT tributado (já com o IMI Familiar e outras deduções). <strong>Quanto mais uma linha
             fica abaixo da dos preços, mais esse fator perdeu para a inflação.</strong></p>
-            <div class="chart-box chart-box-tall"><canvas id="componentsChart" role="img" aria-label="IMI, VPT, taxa efetiva e preços, em índice"></canvas></div>
+            <p class="chart-note" data-lang="en">National figures from the Tax Authority, with <span data-first-year></span> = 100. Average VPT of taxed
+            urban properties; effective rate = IMI collected ÷ taxed VPT (already net of IMI Familiar and other deductions). <strong>The further a line
+            falls below prices, the more that factor lost to inflation.</strong></p>
+            <div class="chart-box chart-box-tall"><canvas id="componentsChart" role="img" aria-label="IMI, VPT, taxa efetiva e preços, em índice" data-en-aria-label="IMI, VPT, effective rate and prices, as an index"></canvas></div>
 
             <div class="chart-grid">
                 <div class="chart-cell" id="part-vc">
-                    <h3>Vc: valor base de construção</h3>
-                    <p class="chart-note">O valor por m² de onde parte o VPT. Passou de <span data-value="vc-first"></span> em <span data-value="vc-first-year"></span>
-                    para <span data-value="vc-last"></span> em <span data-value="vc-last-year"></span> <span id="vcLatest">(<span data-value="vc-latest"></span> em <span data-value="vc-latest-year"></span>)</span>. Se tivesse acompanhado os custos
+                    <h3 data-en="Vc: base construction value">Vc: valor base de construção</h3>
+                    <p class="chart-note" data-lang="pt">O valor por m² de onde parte o VPT. Passou de <span data-value="vc-first"></span> em <span data-value="vc-first-year"></span>
+                    para <span data-value="vc-last"></span> em <span data-value="vc-last-year"></span> <span data-show="vc-latest">(<span data-value="vc-latest"></span> em <span data-value="vc-latest-year"></span>)</span>. Se tivesse acompanhado os custos
                     de construção seria <span data-value="vc-costs"></span>; com a inflação, <span data-value="vc-prices"></span>. Só conta para prédios novos ou reavaliados.
                     <span data-value="vc-first-year"></span> = 100. <strong>Quanto mais o Vc fica abaixo dos custos de construção, mais barata a casa nova
                     sai às Finanças e menor o IMI.</strong></p>
-                    <div class="chart-box"><canvas id="vcChart" role="img" aria-label="Valor base de construção, custos de construção e preços"></canvas></div>
+                    <p class="chart-note" data-lang="en">The value per m² the VPT starts from. It went from <span data-value="vc-first"></span> in <span data-value="vc-first-year"></span>
+                    to <span data-value="vc-last"></span> in <span data-value="vc-last-year"></span> <span data-show="vc-latest">(<span data-value="vc-latest"></span> in <span data-value="vc-latest-year"></span>)</span>. Had it kept up with construction
+                    costs it would be <span data-value="vc-costs"></span>; with inflation, <span data-value="vc-prices"></span>. It only counts for new or reassessed properties.
+                    <span data-value="vc-first-year"></span> = 100. <strong>The further Vc falls below construction costs, the lower the tax value of a new
+                    home and the lower its IMI.</strong></p>
+                    <div class="chart-box"><canvas id="vcChart" role="img" aria-label="Valor base de construção, custos de construção e preços" data-en-aria-label="Base construction value, construction costs and prices"></canvas></div>
                 </div>
                 <div class="chart-cell" id="part-triennial">
-                    <h3>Atualização trienal (art. 138.º)</h3>
-                    <p class="chart-note">Uma casa avaliada em 2012, o ano da avaliação geral, foi atualizada em
+                    <h3 data-en="Triennial update (art. 138)">Atualização trienal (art. 138.º)</h3>
+                    <p class="chart-note" data-lang="pt">Uma casa avaliada em 2012, o ano da avaliação geral, foi atualizada em
                     <span data-value="triennial-years"></span>, com os coeficientes <span data-value="triennial-coefficients"></span>. A casa recebe 75% de cada subida. Com a
                     inflação baixa, os coeficientes ficaram perto de 1 até a inflação de 2022 chegar às tabelas. 2012 = 100.
                     <strong>Quanto mais a linha azul fica abaixo dos preços, maior o desconto real no IMI.</strong></p>
-                    <div class="chart-box"><canvas id="triennialChart" role="img" aria-label="VPT de uma casa avaliada em 2012, com 75% e 100% do coeficiente, e preços"></canvas></div>
+                    <p class="chart-note" data-lang="en">A home valued in 2012, the year of the general reassessment, was updated in
+                    <span data-value="triennial-years"></span>, with coefficients of <span data-value="triennial-coefficients"></span>. The home gets 75% of each rise. With
+                    low inflation, the coefficients stayed close to 1 until the inflation of 2022 reached the tables. 2012 = 100.
+                    <strong>The further the blue line falls below prices, the bigger the real discount on IMI.</strong></p>
+                    <div class="chart-box"><canvas id="triennialChart" role="img" aria-label="VPT de uma casa avaliada em 2012, com 75% e 100% do coeficiente, e preços" data-en-aria-label="VPT of a home valued in 2012, with 75% and 100% of the coefficient, and prices"></canvas></div>
                 </div>
                 <div class="chart-cell">
-                    <h3>Quanto custam os 75%</h3>
-                    <p class="chart-note">Quanto falta ao VPT dessa casa para acompanhar os preços, dividido em duas partes.
+                    <h3 data-en="What the 75% costs">Quanto custam os 75%</h3>
+                    <p class="chart-note" data-lang="pt">Quanto falta ao VPT dessa casa para acompanhar os preços, dividido em duas partes.
                     Em <span data-value="drag-year"></span>, faltam <span data-value="drag-total"></span>: <span data-value="drag-rule"></span> por contar só 75% do coeficiente (com 100%, o VPT
                     seria <span data-value="drag-full"></span> mais alto) e <span data-value="drag-timing"></span> por a atualização chegar tarde: só de 3 em 3 anos, com o
                     coeficiente do ano da avaliação anterior, que é medido pelo IPC sem habitação e não pelo IHPC usado no resto do site.
                     <strong>Quanto mais antiga a avaliação da casa, mais inflação fica por atualizar e maior o desconto no IMI.</strong></p>
-                    <div class="chart-box"><canvas id="dragChart" role="img" aria-label="Perda do VPT face aos preços, dividida entre a regra dos 75% e a atualização tardia"></canvas></div>
+                    <p class="chart-note" data-lang="en">How far that home's VPT falls short of prices, split in two.
+                    In <span data-value="drag-year"></span>, it is <span data-value="drag-total"></span> short: <span data-value="drag-rule"></span> because only 75% of the coefficient counts (with 100%, the VPT
+                    would be <span data-value="drag-full"></span> higher) and <span data-value="drag-timing"></span> because the update comes late: only every 3 years, with the
+                    coefficient of the previous valuation's year, which is measured by the CPI excluding housing and not by the HICP used in the rest of the site.
+                    <strong>The older the home's valuation, the more inflation is left out and the bigger the IMI discount.</strong></p>
+                    <div class="chart-box"><canvas id="dragChart" role="img" aria-label="Perda do VPT face aos preços, dividida entre a regra dos 75% e a atualização tardia" data-en-aria-label="VPT shortfall against prices, split between the 75% rule and the late update"></canvas></div>
                 </div>
                 <div class="chart-cell" id="part-location">
-                    <h3>Cl: coeficientes de localização</h3>
-                    <p class="chart-note">Cada zona tem um coeficiente entre 0,4 e 3,5, que a lei manda rever de 3 em 3 anos.
+                    <h3 data-en="Cl: location coefficients">Cl: coeficientes de localização</h3>
+                    <p class="chart-note" data-lang="pt">Cada zona tem um coeficiente entre 0,4 e 3,5, que a lei manda rever de 3 em 3 anos.
                     A última revisão (Portaria <span data-value="location-portaria"></span>) está em vigor desde <span data-value="location-in-force"></span>; desde
                     <span data-value="location-base"></span>, os preços das casas subiram <span data-value="location-rise"></span> (INE). Os novos coeficientes só se aplicam a
                     prédios avaliados depois. <span data-value="location-base"></span> = 100. <strong>Quanto mais os preços sobem sem rever as zonas, maior o
                     desconto no IMI de quem tem casa numa zona que valorizou.</strong></p>
-                    <div class="chart-box"><canvas id="locationChart" role="img" aria-label="Preços da habitação desde a última revisão dos coeficientes de localização"></canvas></div>
+                    <p class="chart-note" data-lang="en">Each zone has a coefficient between 0.4 and 3.5, which the law says must be revised every 3 years.
+                    The latest revision (Portaria <span data-value="location-portaria"></span>) has been in force since <span data-value="location-in-force"></span>; since
+                    <span data-value="location-base"></span>, house prices have risen <span data-value="location-rise"></span> (INE). The new coefficients only apply to
+                    properties valued afterwards. <span data-value="location-base"></span> = 100. <strong>The more prices rise without revising the zones, the bigger the
+                    IMI discount for owners in a zone that has gained value.</strong></p>
+                    <div class="chart-box"><canvas id="locationChart" role="img" aria-label="Preços da habitação desde a última revisão dos coeficientes de localização" data-en-aria-label="House prices since the latest revision of the location coefficients"></canvas></div>
                 </div>
                 <div class="chart-cell" id="part-ageing">
-                    <h3>Cv: vetustez (exemplo)</h3>
-                    <p class="chart-note">Exemplo: uma casa construída em 2005 e avaliada em 2012. As atualizações trienais não
+                    <h3 data-en="Cv: age (example)">Cv: vetustez (exemplo)</h3>
+                    <p class="chart-note" data-lang="pt">Exemplo: uma casa construída em 2005 e avaliada em 2012. As atualizações trienais não
                     mexem no Cv, mas uma nova avaliação usa a idade da casa nesse ano (Cv de <span data-value="ageing-cv-first"></span> aos
                     <span data-value="ageing-age-first"></span> anos, <span data-value="ageing-cv-last"></span> aos <span data-value="ageing-age-last"></span>) e o Vc desse ano. Em
                     <span data-value="ageing-year"></span>, reavaliá-la baixaria o VPT <span data-value="ageing-drop"></span>, por isso muitos proprietários pedem a reavaliação.
                     Tudo o resto fica igual. 2012 = 100. <strong>Quanto mais antiga for a casa, menor o valor.</strong></p>
-                    <div class="chart-box"><canvas id="ageingChart" role="img" aria-label="VPT de uma casa de exemplo, com e sem reavaliação"></canvas></div>
+                    <p class="chart-note" data-lang="en">Example: a home built in 2005 and valued in 2012. The triennial updates leave
+                    Cv alone, but a new valuation uses the home's age that year (a Cv of <span data-value="ageing-cv-first"></span> at
+                    <span data-value="ageing-age-first"></span> years old, <span data-value="ageing-cv-last"></span> at <span data-value="ageing-age-last"></span>) and that year's Vc. In
+                    <span data-value="ageing-year"></span>, reassessing it would lower the VPT by <span data-value="ageing-drop"></span>, which is why many owners ask for a reassessment.
+                    Everything else stays the same. 2012 = 100. <strong>The older the home, the lower its value.</strong></p>
+                    <div class="chart-box"><canvas id="ageingChart" role="img" aria-label="VPT de uma casa de exemplo, com e sem reavaliação" data-en-aria-label="VPT of an example home, with and without reassessment"></canvas></div>
                 </div>
                 <div class="chart-cell" id="part-rate">
-                    <h3>Taxa</h3>
-                    <p class="chart-note">Média das taxas fixadas pelas câmaras, pesada pela base tributável de cada uma, ao
+                    <h3 data-en="Rate">Taxa</h3>
+                    <p class="chart-note" data-lang="pt">Média das taxas fixadas pelas câmaras, pesada pela base tributável de cada uma, ao
                     lado da taxa efetiva da AT. Em <span data-value="rate-last-year"></span>, <span data-value="rate-at-minimum-last"></span> dos municípios cobravam o mínimo de
                     0,3% (<span data-value="rate-at-minimum-first"></span> em <span data-value="rate-first-year"></span>). O máximo desceu de 0,5% para 0,45% em 2016.
-                    <span id="rateWeights" hidden>Em <span data-value="rate-estimated-years"></span>, os pesos são os de <span data-value="rate-weights-year"></span>.</span>
+                    <span data-show="rate-weights" hidden>Em <span data-value="rate-estimated-years"></span>, os pesos são os de <span data-value="rate-weights-year"></span>.</span>
                     <strong>Quanto mais baixa a taxa, menor o IMI.</strong></p>
-                    <div class="chart-box"><canvas id="avgRateChart" role="img" aria-label="Taxa média fixada pelas câmaras e taxa efetiva"></canvas></div>
+                    <p class="chart-note" data-lang="en">Average of the rates set by the municipalities, weighted by each one's tax base,
+                    next to the Tax Authority's effective rate. In <span data-value="rate-last-year"></span>, <span data-value="rate-at-minimum-last"></span> of municipalities charged the
+                    0.3% minimum (<span data-value="rate-at-minimum-first"></span> in <span data-value="rate-first-year"></span>). The maximum fell from 0.5% to 0.45% in 2016.
+                    <span data-show="rate-weights" hidden>In <span data-value="rate-estimated-years"></span>, the weights are those of <span data-value="rate-weights-year"></span>.</span>
+                    <strong>The lower the rate, the lower the IMI.</strong></p>
+                    <div class="chart-box"><canvas id="avgRateChart" role="img" aria-label="Taxa média fixada pelas câmaras e taxa efetiva" data-en-aria-label="Average rate set by the municipalities and effective rate"></canvas></div>
                 </div>
                 <div class="chart-cell" id="part-familiar">
-                    <h3>IMI Familiar: quem o aplica</h3>
-                    <p class="chart-note">Desde 2015, cada câmara pode baixar o IMI da casa onde vive uma família com dependentes
+                    <h3 data-en="IMI Familiar: who applies it">IMI Familiar: quem o aplica</h3>
+                    <p class="chart-note" data-lang="pt">Desde 2015, cada câmara pode baixar o IMI da casa onde vive uma família com dependentes
                     a cargo. Em <span data-value="familiar-last-year"></span>, <span data-value="familiar-applying-last"></span> municípios (<span data-value="familiar-share-last"></span>) aplicavam-no,
                     com <span data-value="familiar-dwellings-last"></span> dos alojamentos do país; em <span data-value="familiar-first-year"></span> eram
                     <span data-value="familiar-applying-first"></span> (<span data-value="familiar-share-first"></span>). <strong>Quanto mais câmaras aplicam o IMI Familiar,
                     menor a taxa efetiva.</strong></p>
-                    <div class="chart-box"><canvas id="familiarChart" role="img" aria-label="Municípios que aplicam o IMI Familiar e alojamentos que abrangem"></canvas></div>
+                    <p class="chart-note" data-lang="en">Since 2015, each municipality can lower the IMI on the home of a family with
+                    dependents. In <span data-value="familiar-last-year"></span>, <span data-value="familiar-applying-last"></span> municipalities (<span data-value="familiar-share-last"></span>) applied it,
+                    with <span data-value="familiar-dwellings-last"></span> of the country's dwellings; in <span data-value="familiar-first-year"></span> there were
+                    <span data-value="familiar-applying-first"></span> (<span data-value="familiar-share-first"></span>). <strong>The more municipalities apply IMI Familiar,
+                    the lower the effective rate.</strong></p>
+                    <div class="chart-box"><canvas id="familiarChart" role="img" aria-label="Municípios que aplicam o IMI Familiar e alojamentos que abrangem" data-en-aria-label="Municipalities applying IMI Familiar and the dwellings they cover"></canvas></div>
                 </div>
                 <div class="chart-cell">
-                    <h3>IMI Familiar: valor da dedução</h3>
-                    <p class="chart-note">Em <span data-value="familiar-first-year"></span> era uma redução da taxa de até <span data-value="familiar-cuts"></span> para 1, 2 e 3 ou
+                    <h3 data-en="IMI Familiar: size of the deduction">IMI Familiar: valor da dedução</h3>
+                    <p class="chart-note" data-lang="pt">Em <span data-value="familiar-first-year"></span> era uma redução da taxa de até <span data-value="familiar-cuts"></span> para 1, 2 e 3 ou
                     mais dependentes, à escolha de cada câmara; desde <span data-value="familiar-deduction-year"></span> é um valor fixo por ano, de <span data-value="familiar-amounts-first"></span> €,
                     que passou para <span data-value="familiar-amounts-last"></span> € em <span data-value="familiar-raise-year"></span>. As linhas tracejadas são os valores de
                     <span data-value="familiar-deduction-year"></span> corrigidos pela inflação. <strong>Quanto mais uma linha fica acima da sua tracejada,
                     mais a dedução ganhou à inflação.</strong></p>
-                    <div class="chart-box"><canvas id="familiarAmountChart" role="img" aria-label="Valor da dedução do IMI Familiar por número de dependentes"></canvas></div>
+                    <p class="chart-note" data-lang="en">In <span data-value="familiar-first-year"></span> it was a rate cut of up to <span data-value="familiar-cuts"></span> for 1, 2 and 3 or
+                    more dependents, at each municipality's choice; since <span data-value="familiar-deduction-year"></span> it has been a fixed yearly amount, <span data-value="familiar-amounts-first"></span>,
+                    raised to <span data-value="familiar-amounts-last"></span> in <span data-value="familiar-raise-year"></span>. The dashed lines are the
+                    <span data-value="familiar-deduction-year"></span> amounts adjusted for inflation. <strong>The further a line sits above its dashed one,
+                    the more the deduction beat inflation.</strong></p>
+                    <div class="chart-box"><canvas id="familiarAmountChart" role="img" aria-label="Valor da dedução do IMI Familiar por número de dependentes" data-en-aria-label="IMI Familiar deduction by number of dependents"></canvas></div>
                 </div>
                 <div class="chart-cell">
-                    <h3>IMI Familiar: peso na fatura</h3>
-                    <p class="chart-note">A dedução a dividir pelo IMI médio de um prédio urbano (Autoridade Tributária); em 2015, a
+                    <h3 data-en="IMI Familiar: share of the bill">IMI Familiar: peso na fatura</h3>
+                    <p class="chart-note" data-lang="pt">A dedução a dividir pelo IMI médio de um prédio urbano (Autoridade Tributária); em 2015, a
                     redução da taxa baixava a fatura na mesma proporção. Em <span data-value="weight-first-year"></span>, os <span data-value="weight-amount-first"></span> € para
                     3 ou mais dependentes eram <span data-value="weight-share-first"></span> de um IMI médio de <span data-value="weight-bill-first"></span>; em
                     <span data-value="weight-last-year"></span>, os <span data-value="weight-amount-last"></span> € são <span data-value="weight-share-last"></span> de <span data-value="weight-bill-last"></span>. O IMI
                     médio junta casas, comércio, garagens e outros prédios urbanos, por isso numa casa concreta a percentagem pode
                     ser outra.
                     <strong>Quanto mais alta a linha, maior a parte da fatura que o IMI Familiar apaga.</strong></p>
-                    <div class="chart-box"><canvas id="familiarWeightChart" role="img" aria-label="Dedução do IMI Familiar em percentagem do IMI médio por prédio"></canvas></div>
+                    <p class="chart-note" data-lang="en">The deduction divided by the average IMI of an urban property (Tax Authority); in 2015,
+                    the rate cut lowered the bill in the same proportion. In <span data-value="weight-first-year"></span>, the €<span data-value="weight-amount-first"></span> for
+                    3 or more dependents was <span data-value="weight-share-first"></span> of an average IMI of <span data-value="weight-bill-first"></span>; in
+                    <span data-value="weight-last-year"></span>, the €<span data-value="weight-amount-last"></span> is <span data-value="weight-share-last"></span> of <span data-value="weight-bill-last"></span>. The
+                    average IMI mixes homes, shops, garages and other urban properties, so for a particular home the percentage may
+                    differ.
+                    <strong>The higher the line, the bigger the part of the bill IMI Familiar cancels.</strong></p>
+                    <div class="chart-box"><canvas id="familiarWeightChart" role="img" aria-label="Dedução do IMI Familiar em percentagem do IMI médio por prédio" data-en-aria-label="IMI Familiar deduction as a percentage of the average IMI per property"></canvas></div>
                 </div>
             </div>
-            <p class="chart-note components-closing"><strong>O que fica de fora.</strong> A área (A) e a afetação (Ca) não mudam com o tempo,
+            <p class="chart-note components-closing" data-lang="pt"><strong>O que fica de fora.</strong> A área (A) e a afetação (Ca) não mudam com o tempo,
             e a qualidade e conforto (Cq) é uma tabela de majorações e minorações que não segue os preços (a última
             alteração foi em 2016) e, como o Vc, só conta quando o prédio é avaliado. Os três só mudam a média pela mistura
             de prédios novos e antigos. As isenções
             puxam o IMI no sentido contrário: a parte isenta do VPT urbano desceu de <span data-value="exempt-first"></span> em <span data-value="exempt-first-year"></span>
             para <span data-value="exempt-last"></span> em <span data-value="exempt-last-year"></span>.</p>
+            <p class="chart-note components-closing" data-lang="en"><strong>What is left out.</strong> The area (A) and use (Ca) do not change over time,
+            and quality and comfort (Cq) is a table of increases and reductions that does not follow prices (it last
+            changed in 2016) and, like Vc, only counts when the property is valued. The three only move the average through the mix
+            of new and old properties. Exemptions
+            pull IMI the other way: the exempt share of urban VPT fell from <span data-value="exempt-first"></span> in <span data-value="exempt-first-year"></span>
+            to <span data-value="exempt-last"></span> in <span data-value="exempt-last-year"></span>.</p>
         </section>
 
         <section class="card methodology">
-            <h2>Metodologia</h2>
+            <h2 data-en="Methodology">Metodologia</h2>
+            <div data-lang="pt">
             <p><strong>Ano do imposto.</strong> O IMI de um ano é liquidado e pago no ano seguinte (o IMI de 2023 paga-se em 2024).
             Todos os valores estão indexados ao ano do imposto: a receita que as câmaras registam num ano é atribuída ao ano anterior.</p>
             <p><strong>Inflação.</strong> Cada valor é convertido para euros de <span data-target-year></span> a partir do ano em que foi pago,
@@ -310,14 +381,55 @@
             dedução fixa por agregado, conforme o número de dependentes.</p>
             <p><strong>Top 3.</strong> Por defeito, ficam de fora do top 3 os municípios com menos de 3 000 alojamentos, onde um único
             prédio (um hotel, uma barragem) pode mudar muito o resultado. Continuam no mapa e na tabela.</p>
+            </div>
+            <div data-lang="en">
+            <p><strong>Tax year.</strong> A year's IMI is assessed and paid the following year (the IMI for 2023 is paid in 2024).
+            Every figure is indexed by tax year: the revenue municipalities record in a year is assigned to the year before.</p>
+            <p><strong>Inflation.</strong> Each value is converted to euros of <span data-target-year></span> from the year it was paid,
+            with December-on-December euro-area HICP inflation (the same series used in the IRS rates comparison).</p>
+            <p><strong>National figure.</strong> The top chart uses the Tax Authority's statistics: IMI collected on urban properties
+            divided by taxed urban properties. It is the most accurate figure available, but it only exists for the whole country.</p>
+            <p><strong>Municipalities.</strong> No property count is published per municipality, so IMI revenue
+            (DGAL, net revenue collected) is divided by INE's estimate of classic family dwellings. The result is
+            <em>IMI per dwelling</em>, not per property: the revenue also includes shops, offices and land. The district
+            and Portugal lines in each municipality's detail are calculated the same way, so that they can be compared.
+            INE's estimate ends in 2022; the <span data-last-municipal-year></span> value is extrapolated with the previous year's
+            growth and marked with ⚠️. INE's 2020 value is out of line with the years around it (2019 and 2021 match the 2021 Census,
+            2020 moves away and back, by up to 14% in one municipality), so the average of 2019 and 2021 is used instead.</p>
+            <p><strong>IMI = VPT × rate.</strong> For the whole country, the Tax Authority publishes the total VPT of taxed and
+            exempt urban properties. VPT per property is the taxed VPT divided by taxed properties; the effective rate is the IMI collected
+            divided by the taxed VPT, so it already includes IMI Familiar and other deductions. The product of the two is exactly the average
+            IMI per property in the top chart. The municipalities' average rate weights each municipality by its tax base (IMI
+            revenue ÷ rate); years without DGAL accounts use the weights of the last year with accounts.</p>
+            <p><strong>Triennial update.</strong> Under art. 138 of the IMI Code (CIMI), every 3 years the VPT is multiplied by the
+            currency devaluation coefficient (CDM) of the year of the last valuation or update, taken from the yearly portaria of IRS and IRC coefficients.
+            Residential properties get 75% of the rise; shops, industry and offices get all of it. The example follows a home valued in
+            2012, the year of the general reassessment, and the coefficients that applied to it. The shortfall against prices splits into two
+            parts that add up to the total: the 75% rule (the gap between 100% and 75% of the coefficient) and the late update (the gap between
+            100% of the coefficient and HICP inflation).</p>
+            <p><strong>Vc, Cl and Cv.</strong> The base construction value is 125% of the average construction value per m² set by portaria
+            for each year. It is compared with INE's construction cost index for new housing and its house price index
+            (yearly averages). The Cv example applies the table in art. 44 to a home built in 2005 and keeps the area, the
+            location and the other coefficients unchanged.</p>
+            <p><strong>IMI and IMT.</strong> The comparison between the two taxes uses the year the revenue reached the municipalities
+            (DGAL, net revenue collected), not the tax year, because IMT is paid at the time of purchase. Each value is
+            converted to euros of <span data-target-year></span> from that year.</p>
+            <p><strong>Current revenue.</strong> Taxes, fees, current transfers, sales of goods and services and other
+            current revenue (chapters 01 to 08). It leaves out loans, asset sales and capital transfers,
+            which vary a lot from year to year.</p>
+            <p><strong>Events that affect every municipality.</strong> The general reassessment of urban properties (2012–2013) revalued
+            about 5 million properties, with increases phased in by a safeguard clause until 2014. Since 2015, IMI Familiar
+            lets municipalities lower the IMI of households with dependents: in 2015 with a rate cut, since 2016 with a
+            fixed deduction per household, depending on the number of dependents.</p>
+            <p><strong>Top 3.</strong> By default, municipalities with fewer than 3,000 dwellings are left out of the top 3, since a single
+            property (a hotel, a dam) can change the result a lot. They stay on the map and in the table.</p>
+            </div>
         </section>
 
         <section class="card sources">
-            <h2>Fontes</h2>
+            <h2 data-en="Sources">Fontes</h2>
             <div id="sourcesList"></div>
         </section>
     </main>
-
-    <script src="script.js"></script>
 </body>
 </html>

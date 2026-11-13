@@ -15,12 +15,51 @@ a {
     color: #5a4fcf;
 }
 
+/* Text that comes in two copies: show the one in the page's language. */
+html:not([lang="en"]) [data-lang="en"],
+html[lang="en"] [data-lang="pt"] {
+    display: none !important;
+}
+
 body > header {
+    position: relative;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     text-align: center;
     padding: 2rem 1rem;
     margin-bottom: 2rem;
+}
+
+.lang-switch {
+    position: absolute;
+    top: 0.75rem;
+    right: 1rem;
+    display: flex;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.lang-switch a {
+    color: white;
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    padding: 0.25rem 0.6rem;
+    opacity: 0.8;
+}
+
+.lang-switch a:hover,
+.lang-switch a:focus-visible {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.lang-switch a[aria-current="true"] {
+    background: white;
+    color: #5a4fcf;
+    opacity: 1;
 }
 
 body > header h1 {
@@ -695,6 +734,10 @@ tbody tr:hover {
 }
 
 @media (max-width: 768px) {
+    body > header {
+        padding-top: 3rem;
+    }
+
     body > header h1 {
         font-size: 1.8rem;
     }

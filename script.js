@@ -8,6 +8,54 @@
 const FIRST_YEAR = 2013;
 const SMALL_MUNICIPALITY = 3000; // dwellings in the first year
 
+// --- language ------------------------------------------------------------------
+
+const LANGUAGES = ['pt', 'en'];
+
+// Time zones of the Portuguese-speaking countries: Portugal, Brazil, Angola,
+// Mozambique, Cape Verde, Guinea-Bissau, São Tomé and Príncipe, Timor-Leste.
+const PORTUGUESE_TIME_ZONES = new Set([
+    'Europe/Lisbon', 'Atlantic/Azores', 'Atlantic/Madeira', 'Portugal',
+    'America/Sao_Paulo', 'America/Noronha', 'America/Belem', 'America/Fortaleza', 'America/Recife',
+    'America/Araguaina', 'America/Maceio', 'America/Bahia', 'America/Campo_Grande', 'America/Cuiaba',
+    'America/Santarem', 'America/Porto_Velho', 'America/Boa_Vista', 'America/Manaus', 'America/Eirunepe',
+    'America/Rio_Branco', 'Brazil/East', 'Brazil/West', 'Brazil/Acre', 'Brazil/DeNoronha',
+    'Africa/Luanda', 'Africa/Maputo', 'Atlantic/Cape_Verde', 'Africa/Bissau', 'Africa/Sao_Tome', 'Asia/Dili'
+]);
+
+// Portuguese, unless the visitor is neither in a Portuguese-speaking country
+// (going by the browser's time zone, the only location a page gets without
+// asking) nor has Portuguese (pt, pt-PT, pt-BR…) among the browser's
+// languages. An explicit choice, ?lang= or the switch in the header, wins.
+function detectLanguage({ param = null, stored = null, languages = [], timeZone = null } = {}) {
+    for (const choice of [param, stored]) if (LANGUAGES.includes(choice)) return choice;
+    if (languages.some(l => /^pt(-|$)/i.test(l))) return 'pt';
+    if (PORTUGUESE_TIME_ZONES.has(timeZone)) return 'pt';
+    return 'en';
+}
+
+function browserLanguage() {
+    let stored = null, timeZone = null;
+    try { stored = localStorage.getItem('lang'); } catch { /* storage blocked */ }
+    try { timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { /* no Intl */ }
+    return detectLanguage({
+        param: new URLSearchParams(location.search).get('lang'),
+        stored,
+        languages: navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''],
+        timeZone
+    });
+}
+
+// Without a document (the tests) the site is in Portuguese.
+const LANG = typeof document !== 'undefined' ? browserLanguage() : 'pt';
+const LOCALE = LANG === 'en' ? 'en-GB' : 'pt-PT';
+if (typeof document !== 'undefined') document.documentElement.lang = LANG;
+
+// The same text in both languages, side by side where it is used.
+function tr(pt, en) {
+    return LANG === 'en' ? en : pt;
+}
+
 // Value of an inflation entry: a plain number, or {value, estimate}.
 function inflationRate(inflation, year) {
     const entry = inflation[String(year)];
@@ -130,18 +178,18 @@ function revenueByReceiptYear(municipalities, inflation, targetYear) {
 
 const METRICS = {
     real: {
-        label: 'IMI por alojamento, a preços de hoje',
-        short: 'IMI real por alojamento',
+        label: tr('IMI por alojamento, a preços de hoje', "IMI per dwelling, at today's prices"),
+        short: tr('IMI real por alojamento', 'Real IMI per dwelling'),
         change: 'relative'
     },
     nominal: {
-        label: 'IMI por alojamento, em euros correntes',
-        short: 'IMI nominal por alojamento',
+        label: tr('IMI por alojamento, em euros correntes', 'IMI per dwelling, in current euros'),
+        short: tr('IMI nominal por alojamento', 'Nominal IMI per dwelling'),
         change: 'relative'
     },
     share: {
-        label: 'IMI em % das receitas correntes',
-        short: 'IMI em % das receitas correntes',
+        label: tr('IMI em % das receitas correntes', 'IMI as % of current revenue'),
+        short: tr('IMI em % das receitas correntes', 'IMI as % of current revenue'),
         change: 'points'
     }
 };
@@ -401,18 +449,26 @@ function familiarWeight(familiar, national) {
 // UI
 // ===========================================================================
 
+const POINTS = tr('p.p.', 'pp');
+
 const fmt = {
-    euro: v => v == null ? '—' : v.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }),
-    euro2: v => v == null ? '—' : v.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-    millions: v => v == null ? '—' : (v / 1e6).toLocaleString('pt-PT', { maximumFractionDigits: 0 }) + ' M€',
-    pct: v => v == null ? '—' : (v * 100).toLocaleString('pt-PT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%',
-    rate: v => v == null ? '—' : (v * 100).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 3 }) + '%',
-    int: v => v == null ? '—' : v.toLocaleString('pt-PT'),
-    money: v => v == null ? '—' : v === 0 ? '0 €' : Math.abs(v) >= 1e6
-        ? (v / 1e6).toLocaleString('pt-PT', { maximumFractionDigits: Math.abs(v) >= 1e8 ? 0 : 1 }) + ' M€'
-        : (v / 1e3).toLocaleString('pt-PT', { maximumFractionDigits: 0 }) + ' mil €',
-    signedPct: v => v == null ? '—' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v * 100).toLocaleString('pt-PT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%',
-    signedPoints: v => v == null ? '—' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toLocaleString('pt-PT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' p.p.'
+    euro: v => v == null ? '—' : v.toLocaleString(LOCALE, { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }),
+    euro2: v => v == null ? '—' : v.toLocaleString(LOCALE, { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    pct: v => v == null ? '—' : (v * 100).toLocaleString(LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%',
+    rate: v => v == null ? '—' : (v * 100).toLocaleString(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 3 }) + '%',
+    int: v => v == null ? '—' : v.toLocaleString(LOCALE),
+    // "12,3 M€" / "450 mil €"; in English "€12.3M" / "€450k"
+    money: v => {
+        if (v == null) return '—';
+        if (v === 0) return tr('0 €', '€0');
+        const [n, digits, pt, en] = Math.abs(v) >= 1e6
+            ? [v / 1e6, Math.abs(v) >= 1e8 ? 0 : 1, ' M€', 'M']
+            : [v / 1e3, 0, ' mil €', 'k'];
+        const text = n.toLocaleString(LOCALE, { maximumFractionDigits: digits });
+        return tr(text + pt, (n < 0 ? '-€' + text.slice(1) : '€' + text) + en);
+    },
+    signedPct: v => v == null ? '—' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v * 100).toLocaleString(LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%',
+    signedPoints: v => v == null ? '—' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toLocaleString(LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' ' + POINTS
 };
 
 function formatMetric(metric, value) {
@@ -457,10 +513,45 @@ function fill(values) {
     }
 }
 
-// "a, b e c"
-function listPt(items) {
+// Show or hide every copy of a <span data-show="key"> (one per language).
+function show(key, visible) {
+    for (const node of document.querySelectorAll(`[data-show="${key}"]`)) node.hidden = !visible;
+}
+
+// The static text of index.html in English: data-en replaces an element's
+// text, data-en-<attribute> an attribute. Passages with numbers inside come
+// in two copies (data-lang), and styles.css hides the other language's.
+function translatePage() {
+    for (const node of document.querySelectorAll('[data-set-lang]')) {
+        const current = node.dataset.setLang === LANG;
+        if (current) node.setAttribute('aria-current', 'true');
+        node.addEventListener('click', e => {
+            e.preventDefault();
+            try { localStorage.setItem('lang', node.dataset.setLang); } catch { /* storage blocked */ }
+            const params = new URLSearchParams(location.search);
+            params.set('lang', node.dataset.setLang);
+            location.href = `?${params}${location.hash}`;
+        });
+    }
+    if (LANG !== 'en') return;
+    for (const node of document.querySelectorAll('[data-en]')) node.textContent = node.dataset.en;
+    for (const node of document.querySelectorAll('*')) {
+        for (const attr of [...node.attributes]) {
+            if (attr.name.startsWith('data-en-')) node.setAttribute(attr.name.slice('data-en-'.length), attr.value);
+        }
+    }
+}
+
+// Tooltip title of a chart by tax year.
+function imiYearTitle(year) {
+    const paid = paymentYear(Number(year));
+    return tr(`IMI de ${year} (pago em ${paid})`, `IMI for ${year} (paid in ${paid})`);
+}
+
+// "a, b e c" / "a, b and c"
+function listJoin(items) {
     const list = items.map(String);
-    return list.length < 2 ? list.join('') : `${list.slice(0, -1).join(', ')} e ${list[list.length - 1]}`;
+    return list.length < 2 ? list.join('') : `${list.slice(0, -1).join(', ')}${tr(' e ', ' and ')}${list[list.length - 1]}`;
 }
 
 function html(strings, ...values) {
@@ -534,19 +625,21 @@ class App {
         const real = last.real / first.real - 1;
         const nominal = last.nominal / first.nominal - 1;
         const prices = inflationFactor(this.inflation, paymentYear(first.year), paymentYear(last.year)) - 1;
+        const moved = html`<strong>${real < 0 ? tr('caiu', 'fallen') : tr('subiu', 'risen')} ${fmt.pct(Math.abs(real))}</strong>`;
         el('headline').innerHTML = html`
-            <p class="headline-lede">Desde ${first.year}, o IMI médio de um prédio urbano
-            <strong>${real < 0 ? 'caiu' : 'subiu'} ${fmt.pct(Math.abs(real))}</strong> em termos reais.</p>
+            <p class="headline-lede">${raw(tr(
+                html`Desde ${first.year}, o IMI médio de um prédio urbano ${raw(moved)} em termos reais.`,
+                html`Since ${first.year}, the average IMI on an urban property has ${raw(moved)} in real terms.`))}</p>
             <div class="stat-row">
-                <div class="stat"><span class="stat-label">IMI médio por prédio, ${first.year}</span>
+                <div class="stat"><span class="stat-label">${tr('IMI médio por prédio', 'Average IMI per property')}, ${first.year}</span>
                     <span class="stat-value">${fmt.euro(first.real)}</span>
-                    <span class="stat-note">a preços de ${this.targetYear} (${fmt.euro(first.nominal)} na altura)</span></div>
-                <div class="stat"><span class="stat-label">IMI médio por prédio, ${last.year}</span>
+                    <span class="stat-note">${tr(`a preços de ${this.targetYear} (${fmt.euro(first.nominal)} na altura)`, `at ${this.targetYear} prices (${fmt.euro(first.nominal)} at the time)`)}</span></div>
+                <div class="stat"><span class="stat-label">${tr('IMI médio por prédio', 'Average IMI per property')}, ${last.year}</span>
                     <span class="stat-value">${fmt.euro(last.real)}</span>
-                    <span class="stat-note">pago em ${paymentYear(last.year)}</span></div>
-                <div class="stat"><span class="stat-label">Variação nominal</span>
+                    <span class="stat-note">${tr('pago em', 'paid in')} ${paymentYear(last.year)}</span></div>
+                <div class="stat"><span class="stat-label">${tr('Variação nominal', 'Nominal change')}</span>
                     <span class="stat-value">${fmt.signedPct(nominal)}</span>
-                    <span class="stat-note">os preços subiram ${fmt.pct(prices)} no mesmo período</span></div>
+                    <span class="stat-note">${tr(`os preços subiram ${fmt.pct(prices)} no mesmo período`, `prices rose ${fmt.pct(prices)} over the same period`)}</span></div>
             </div>`;
     }
 
@@ -557,16 +650,16 @@ class App {
             data: {
                 labels,
                 datasets: [
-                    lineDataset(`A preços de ${this.targetYear}`, this.national.map(r => r.real), COLORS.real, { width: 2.5 }),
-                    lineDataset('Em euros da altura', this.national.map(r => r.nominal), COLORS.nominal)
+                    lineDataset(tr(`A preços de ${this.targetYear}`, `At ${this.targetYear} prices`), this.national.map(r => r.real), COLORS.real, { width: 2.5 }),
+                    lineDataset(tr('Em euros da altura', 'In euros of the time'), this.national.map(r => r.nominal), COLORS.nominal)
                 ]
             },
             options: chartOptions({
                 y: { ticks: { callback: v => fmt.euro(v) } },
                 tooltip: ctx => `${ctx.dataset.label}: ${fmt.euro2(ctx.parsed.y)}`,
-                title: year => `IMI de ${year} (pago em ${paymentYear(Number(year))})`,
+                title: imiYearTitle,
                 markers: [
-                    { year: 2014, text: 'fim da avaliação geral' },
+                    { year: 2014, text: tr('fim da avaliação geral', 'reassessment ends') },
                     { year: 2015, text: 'IMI Familiar' }
                 ]
             }),
@@ -579,42 +672,42 @@ class App {
     renderComponents() {
         const years = this.nationalRows.map(r => r.year);
         const labels = years.map(String);
-        const index = v => v == null ? '—' : v.toLocaleString('pt-PT', { maximumFractionDigits: 1 });
+        const index = v => v == null ? '—' : v.toLocaleString(LOCALE, { maximumFractionDigits: 1 });
         const indexAxis = { ticks: { callback: v => index(v) } };
         const indexTooltip = ctx => `${ctx.dataset.label}: ${index(ctx.parsed.y)}`;
-        const pricesLine = (data, label = 'Preços') => lineDataset(label, data, COLORS.prices, { dash: [6, 4] });
+        const pricesLine = (data, label = tr('Preços', 'Prices')) => lineDataset(label, data, COLORS.prices, { dash: [6, 4] });
 
         // IMI = VPT × rate
         const split = decomposition(this.nationalData, this.inflation);
         const first = split[0], end = split[split.length - 1];
         el('componentsStats').innerHTML = html`
-            <div class="stat"><span class="stat-label">VPT médio por prédio, ${first.year} → ${end.year}</span>
+            <div class="stat"><span class="stat-label">${tr('VPT médio por prédio', 'Average VPT per property')}, ${first.year} → ${end.year}</span>
                 <span class="stat-value">${fmt.signedPct(end.vpt / 100 - 1)}</span>
                 <span class="stat-note">${fmt.euro(first.vptPerProperty)} → ${fmt.euro(end.vptPerProperty)} · real: <strong>${fmt.signedPct(end.vpt / end.prices - 1)}</strong></span></div>
-            <div class="stat"><span class="stat-label">Taxa efetiva</span>
+            <div class="stat"><span class="stat-label">${tr('Taxa efetiva', 'Effective rate')}</span>
                 <span class="stat-value">${fmt.signedPct(end.rate / 100 - 1)}</span>
                 <span class="stat-note">${fmt.rate(first.effectiveRate)} → ${fmt.rate(end.effectiveRate)}</span></div>
-            <div class="stat"><span class="stat-label">IMI por prédio</span>
+            <div class="stat"><span class="stat-label">${tr('IMI por prédio', 'IMI per property')}</span>
                 <span class="stat-value">${fmt.signedPct(end.imi / 100 - 1)}</span>
-                <span class="stat-note">real: <strong>${fmt.signedPct(end.imi / end.prices - 1)}</strong> · os preços subiram ${fmt.pct(end.prices / 100 - 1)}</span></div>`;
+                <span class="stat-note">real: <strong>${fmt.signedPct(end.imi / end.prices - 1)}</strong> · ${tr('os preços subiram', 'prices rose')} ${fmt.pct(end.prices / 100 - 1)}</span></div>`;
         this.replaceChart('components', el('componentsChart'), {
             type: 'line',
             data: {
                 labels,
                 datasets: [
-                    lineDataset('IMI por prédio', split.map(r => r.imi), COLORS.real, { width: 3 }),
-                    lineDataset('VPT por prédio', split.map(r => r.vpt), COLORS.vpt),
-                    lineDataset('Taxa efetiva', split.map(r => r.rate), COLORS.rate),
+                    lineDataset(tr('IMI por prédio', 'IMI per property'), split.map(r => r.imi), COLORS.real, { width: 3 }),
+                    lineDataset(tr('VPT por prédio', 'VPT per property'), split.map(r => r.vpt), COLORS.vpt),
+                    lineDataset(tr('Taxa efetiva', 'Effective rate'), split.map(r => r.rate), COLORS.rate),
                     pricesLine(split.map(r => r.prices))
                 ]
             },
             options: chartOptions({
                 y: indexAxis,
                 tooltip: indexTooltip,
-                title: year => `IMI de ${year} (${first.year} = 100)`,
+                title: year => tr(`IMI de ${year} (${first.year} = 100)`, `IMI for ${year} (${first.year} = 100)`),
                 markers: [
                     { year: 2015, text: 'IMI Familiar' },
-                    { year: 2024, text: 'atualização trienal' }
+                    { year: 2024, text: tr('atualização trienal', 'triennial update') }
                 ]
             }),
             plugins: [endLabels(index), yearMarkers]
@@ -630,14 +723,14 @@ class App {
             'vc-latest': fmt.euro2(latestVc.base), 'vc-latest-year': latestVc.year,
             'vc-costs': fmt.euro(vcFirst.vc * vcLast.costs / 100), 'vc-prices': fmt.euro(vcFirst.vc * vcLast.prices / 100)
         });
-        el('vcLatest').hidden = latestVc.year === vcLast.year;
+        show('vc-latest', latestVc.year !== vcLast.year);
         this.replaceChart('vc', el('vcChart'), {
             type: 'line',
             data: {
                 labels,
                 datasets: [
                     lineDataset('Vc', vc.map(r => r.vcIndex), COLORS.real, { width: 2.5, stepped: true }),
-                    lineDataset('Custos de construção (INE)', vc.map(r => r.costs), COLORS.rate),
+                    lineDataset(tr('Custos de construção (INE)', 'Construction costs (INE)'), vc.map(r => r.costs), COLORS.rate),
                     pricesLine(vc.map(r => r.prices))
                 ]
             },
@@ -646,7 +739,7 @@ class App {
                 tooltip: ctx => ctx.datasetIndex === 0
                     ? `Vc: ${fmt.euro2(vc[ctx.dataIndex].vc)}/m² (${index(ctx.parsed.y)})`
                     : indexTooltip(ctx),
-                title: year => `Valor base de ${year}`
+                title: year => tr(`Valor base de ${year}`, `Base value for ${year}`)
             }),
             plugins: [endLabels(index)]
         });
@@ -657,18 +750,18 @@ class App {
         const paths = triennialPaths(this.components, this.inflation, homeYears, { valuedIn });
         const pathEnd = paths[paths.length - 1];
         const steps = paths.filter(r => r.coefficient !== null);
-        const coefficient = c => c.toLocaleString('pt-PT', { minimumFractionDigits: 2 });
+        const coefficient = c => c.toLocaleString(LOCALE, { minimumFractionDigits: 2 });
         fill({
-            'triennial-years': listPt(steps.map(r => r.year)),
-            'triennial-coefficients': listPt(steps.map(r => coefficient(r.coefficient)))
+            'triennial-years': listJoin(steps.map(r => r.year)),
+            'triennial-coefficients': listJoin(steps.map(r => coefficient(r.coefficient)))
         });
         this.replaceChart('triennial', el('triennialChart'), {
             type: 'line',
             data: {
                 labels: homeYears.map(String),
                 datasets: [
-                    lineDataset('Com 75% (a lei)', paths.map(r => 100 * r.actual), COLORS.real, { width: 2.5, stepped: true }),
-                    lineDataset('Com 100% do coeficiente', paths.map(r => 100 * r.full), COLORS.vpt, { stepped: true }),
+                    lineDataset(tr('Com 75% (a lei)', 'With 75% (the law)'), paths.map(r => 100 * r.actual), COLORS.real, { width: 2.5, stepped: true }),
+                    lineDataset(tr('Com 100% do coeficiente', 'With 100% of the coefficient'), paths.map(r => 100 * r.full), COLORS.vpt, { stepped: true }),
                     pricesLine(paths.map(r => 100 * r.prices))
                 ]
             },
@@ -677,7 +770,8 @@ class App {
                 tooltip: indexTooltip,
                 title: year => {
                     const row = paths.find(r => r.year === Number(year));
-                    return row.coefficient === null ? year : `${year}: atualização, coeficiente ${row.coefficient.toLocaleString('pt-PT', { minimumFractionDigits: 2 })}`;
+                    return row.coefficient === null ? year
+                        : tr(`${year}: atualização, coeficiente ${coefficient(row.coefficient)}`, `${year}: update, coefficient ${coefficient(row.coefficient)}`);
                 }
             }),
             plugins: [endLabels(index)]
@@ -693,7 +787,7 @@ class App {
             x: { stacked: true },
             y: { stacked: true, min: 0, ticks: { callback: v => fmt.pct(v) } },
             tooltip: ctx => `${ctx.dataset.label}: ${fmt.pct(ctx.parsed.y)}`,
-            title: year => `VPT abaixo dos preços em ${year}`
+            title: year => tr(`VPT abaixo dos preços em ${year}`, `VPT below prices in ${year}`)
         });
         dragOptions.plugins.legend.labels.pointStyle = 'rect';
         this.replaceChart('drag', el('dragChart'), {
@@ -701,8 +795,8 @@ class App {
             data: {
                 labels: homeYears.map(String),
                 datasets: [
-                    barDataset('Regra dos 75%', paths.map(r => r.lossRule), COLORS.rate),
-                    barDataset('Atualização tardia', paths.map(r => r.lossTiming), COLORS.loss)
+                    barDataset(tr('Regra dos 75%', 'The 75% rule'), paths.map(r => r.lossRule), COLORS.rate),
+                    barDataset(tr('Atualização tardia', 'Late update'), paths.map(r => r.lossTiming), COLORS.loss)
                 ]
             },
             options: dragOptions
@@ -725,18 +819,18 @@ class App {
             data: {
                 labels: locationYears.map(String),
                 datasets: [
-                    lineDataset('Preços da habitação (INE)', priceSeries, COLORS.rate, { width: 2.5 }),
-                    lineDataset('Coeficientes de localização', locationYears.map(() => 100), COLORS.real, { width: 2.5, stepped: true })
+                    lineDataset(tr('Preços da habitação (INE)', 'House prices (INE)'), priceSeries, COLORS.rate, { width: 2.5 }),
+                    lineDataset(tr('Coeficientes de localização', 'Location coefficients'), locationYears.map(() => 100), COLORS.real, { width: 2.5, stepped: true })
                 ]
             },
             options: chartOptions({
                 y: { min: 0, ...indexAxis },
                 tooltip: indexTooltip,
-                title: year => Number(year) === revision.inForce ? `${year}: revisão em vigor`
-                    : due.includes(Number(year)) ? `${year}: revisão prevista na lei, não feita` : year,
+                title: year => Number(year) === revision.inForce ? tr(`${year}: revisão em vigor`, `${year}: revision in force`)
+                    : due.includes(Number(year)) ? tr(`${year}: revisão prevista na lei, não feita`, `${year}: revision due by law, not made`) : year,
                 markers: [
-                    { year: revision.inForce, text: 'revisão' },
-                    ...due.map(year => ({ year, text: 'em falta' }))
+                    { year: revision.inForce, text: tr('revisão', 'revision') },
+                    ...due.map(year => ({ year, text: tr('em falta', 'missing') }))
                 ]
             }),
             plugins: [endLabels(index), yearMarkers]
@@ -747,8 +841,8 @@ class App {
         const example = ageingExample(this.components, this.inflation, homeYears, { built, valuedIn });
         const exampleEnd = example[example.length - 1];
         fill({
-            'ageing-cv-first': example[0].cv.toLocaleString('pt-PT'), 'ageing-age-first': example[0].age,
-            'ageing-cv-last': exampleEnd.cv.toLocaleString('pt-PT'), 'ageing-age-last': exampleEnd.age,
+            'ageing-cv-first': example[0].cv.toLocaleString(LOCALE), 'ageing-age-first': example[0].age,
+            'ageing-cv-last': exampleEnd.cv.toLocaleString(LOCALE), 'ageing-age-last': exampleEnd.age,
             'ageing-year': exampleEnd.year, 'ageing-drop': fmt.pct(1 - exampleEnd.reassessed / exampleEnd.current)
         });
         this.replaceChart('ageing', el('ageingChart'), {
@@ -756,8 +850,8 @@ class App {
             data: {
                 labels: homeYears.map(String),
                 datasets: [
-                    lineDataset('VPT atual (só atualizações)', example.map(r => r.current), COLORS.real, { width: 2.5, stepped: true }),
-                    lineDataset('VPT se reavaliada nesse ano', example.map(r => r.reassessed), COLORS.rate, { stepped: true }),
+                    lineDataset(tr('VPT atual (só atualizações)', 'Current VPT (updates only)'), example.map(r => r.current), COLORS.real, { width: 2.5, stepped: true }),
+                    lineDataset(tr('VPT se reavaliada nesse ano', 'VPT if reassessed that year'), example.map(r => r.reassessed), COLORS.rate, { stepped: true }),
                     pricesLine(example.map(r => r.prices))
                 ]
             },
@@ -766,7 +860,7 @@ class App {
                 tooltip: indexTooltip,
                 title: year => {
                     const row = example.find(r => r.year === Number(year));
-                    return `${year}: ${row.age} anos, Cv ${row.cv.toLocaleString('pt-PT', { minimumFractionDigits: 2 })}`;
+                    return `${year}: ${row.age} ${tr('anos', 'years old')}, Cv ${coefficient(row.cv)}`;
                 }
             }),
             plugins: [endLabels(index)]
@@ -779,24 +873,24 @@ class App {
         fill({
             'rate-last-year': avgEnd.year, 'rate-at-minimum-last': fmt.pct(avgEnd.atMinimum),
             'rate-first-year': avg[0].year, 'rate-at-minimum-first': fmt.pct(avg[0].atMinimum),
-            'rate-estimated-years': listPt(estimated), 'rate-weights-year': estimated.length ? estimated[0] - 1 : ''
+            'rate-estimated-years': listJoin(estimated), 'rate-weights-year': estimated.length ? estimated[0] - 1 : ''
         });
-        el('rateWeights').hidden = !estimated.length;
+        show('rate-weights', estimated.length > 0);
         this.replaceChart('avgRate', el('avgRateChart'), {
             type: 'line',
             data: {
                 labels,
                 datasets: [
-                    lineDataset('Taxa média das câmaras', avg.map(r => r.rate), COLORS.real, { width: 2.5 }),
-                    lineDataset('Taxa efetiva (AT)', split.map(r => r.effectiveRate), COLORS.rate),
-                    lineDataset('Máximo legal', years.map(y => y < 2016 ? 0.005 : 0.0045), COLORS.prices, { width: 1.5, stepped: true, dash: [6, 4] }),
-                    lineDataset('Mínimo legal', years.map(() => 0.003), COLORS.prices, { width: 1.5, dash: [2, 3] })
+                    lineDataset(tr('Taxa média das câmaras', "Municipalities' average rate"), avg.map(r => r.rate), COLORS.real, { width: 2.5 }),
+                    lineDataset(tr('Taxa efetiva (AT)', 'Effective rate (AT)'), split.map(r => r.effectiveRate), COLORS.rate),
+                    lineDataset(tr('Máximo legal', 'Legal maximum'), years.map(y => y < 2016 ? 0.005 : 0.0045), COLORS.prices, { width: 1.5, stepped: true, dash: [6, 4] }),
+                    lineDataset(tr('Mínimo legal', 'Legal minimum'), years.map(() => 0.003), COLORS.prices, { width: 1.5, dash: [2, 3] })
                 ]
             },
             options: chartOptions({
                 y: { suggestedMin: 0.0028, suggestedMax: 0.0052, ticks: { callback: v => fmt.rate(v) } },
                 tooltip: ctx => `${ctx.dataset.label}: ${fmt.rate(ctx.parsed.y)}`,
-                title: year => `Taxas para o IMI de ${year}`
+                title: year => tr(`Taxas para o IMI de ${year}`, `Rates for the IMI for ${year}`)
             }),
             plugins: [endLabels(v => fmt.rate(v))]
         });
@@ -808,20 +902,21 @@ class App {
         const dFirst = deductions[0];
         const sameAmounts = (a, b) => ['1', '2', '3+'].every(k => a[k] === b[k]);
         const dRaise = deductions.find(r => !sameAmounts(r.amounts, dFirst.amounts)) || dFirst;
-        const euros = a => listPt(['1', '2', '3+'].map(k => a[k]));
+        // "20, 40 e 70" (the note adds the €) / "€20, €40 and €70"
+        const euros = a => listJoin(['1', '2', '3+'].map(k => tr(String(a[k]), `€${a[k]}`)));
         fill({
             'familiar-last-year': famLast.year, 'familiar-applying-last': famLast.applying,
             'familiar-share-last': fmt.pct(famLast.share), 'familiar-dwellings-last': fmt.pct(famLast.dwellingShare),
             'familiar-first-year': famFirst.year, 'familiar-applying-first': famFirst.applying,
             'familiar-share-first': fmt.pct(famFirst.share),
-            'familiar-cuts': famFirst.type === 'reduction' ? listPt(['1', '2', '3+'].map(k => `${Math.round(famFirst.maximum[k] * 100)}%`)) : '',
+            'familiar-cuts': famFirst.type === 'reduction' ? listJoin(['1', '2', '3+'].map(k => `${Math.round(famFirst.maximum[k] * 100)}%`)) : '',
             'familiar-deduction-year': dFirst.year, 'familiar-amounts-first': euros(dFirst.amounts),
             'familiar-amounts-last': euros(dRaise.amounts), 'familiar-raise-year': dRaise.year
         });
         const familiarOptions = chartOptions({
             y: { min: 0, max: 1, ticks: { callback: v => fmt.pct(v) } },
             tooltip: ctx => `${ctx.dataset.label}: ${fmt.pct(ctx.parsed.y)}`,
-            title: year => `IMI Familiar de ${year}`
+            title: year => tr(`IMI Familiar de ${year}`, `IMI Familiar for ${year}`)
         });
         familiarOptions.plugins.legend.labels.pointStyle = 'rect';
         this.replaceChart('familiar', el('familiarChart'), {
@@ -830,28 +925,32 @@ class App {
                 labels: familiar.map(r => String(r.year)),
                 datasets: [
                     // A lower `order` is drawn on top: the line over the bars.
-                    { type: 'bar', label: 'Municípios que o aplicam', data: familiar.map(r => r.share), backgroundColor: COLORS.real, borderWidth: 0, barPercentage: 0.7, order: 1 },
-                    { ...lineDataset('Alojamentos nesses municípios', familiar.map(r => r.dwellingShare), COLORS.rate, { width: 2.5 }), type: 'line', order: 0 }
+                    { type: 'bar', label: tr('Municípios que o aplicam', 'Municipalities applying it'), data: familiar.map(r => r.share), backgroundColor: COLORS.real, borderWidth: 0, barPercentage: 0.7, order: 1 },
+                    { ...lineDataset(tr('Alojamentos nesses municípios', 'Dwellings in those municipalities'), familiar.map(r => r.dwellingShare), COLORS.rate, { width: 2.5 }), type: 'line', order: 0 }
                 ]
             },
             options: familiarOptions,
             plugins: [endLabels(v => fmt.pct(v))]
         });
-        const dependents = [['1', '1 dependente', COLORS.real], ['2', '2 dependentes', COLORS.vpt], ['3+', '3 ou mais', COLORS.rate]];
+        const dependents = [
+            ['1', tr('1 dependente', '1 dependent'), COLORS.real],
+            ['2', tr('2 dependentes', '2 dependents'), COLORS.vpt],
+            ['3+', tr('3 ou mais', '3 or more'), COLORS.rate]
+        ];
         const amountOptions = chartOptions({
             y: { min: 0, ticks: { callback: v => fmt.euro(v) } },
             tooltip: ctx => `${ctx.dataset.label}: ${fmt.euro2(ctx.parsed.y)}`,
-            title: year => `Dedução para o IMI de ${year}`
+            title: year => tr(`Dedução para o IMI de ${year}`, `Deduction from the IMI for ${year}`)
         });
         // The dashed inflation lines are explained in the note, not the legend.
-        amountOptions.plugins.legend.labels.filter = item => !item.text.includes('inflação');
+        amountOptions.plugins.legend.labels.filter = item => !item.text.includes(tr('inflação', 'inflation'));
         this.replaceChart('familiarAmount', el('familiarAmountChart'), {
             type: 'line',
             data: {
                 labels: deductions.map(r => String(r.year)),
                 datasets: dependents.flatMap(([k, label, color]) => [
                     lineDataset(label, deductions.map(r => r.amounts[k]), color, { width: 2.5, stepped: true }),
-                    lineDataset(`${label}, valor de ${dFirst.year} com a inflação`,
+                    lineDataset(tr(`${label}, valor de ${dFirst.year} com a inflação`, `${label}, ${dFirst.year} amount with inflation`),
                         deductions.map(r => dFirst.amounts[k] * priceIndex(this.inflation, dFirst.year, r.year)), color, { width: 1.5, dash: [6, 4] })
                 ])
             },
@@ -879,10 +978,11 @@ class App {
                 tooltip: ctx => {
                     const row = weight[ctx.dataIndex];
                     const key = dependents[ctx.datasetIndex][0];
-                    const amount = row.type === 'reduction' ? 'redução da taxa' : `${row.amounts[key]} € de ${fmt.euro(row.bill)}`;
+                    const amount = row.type === 'reduction' ? tr('redução da taxa', 'rate cut')
+                        : tr(`${row.amounts[key]} € de ${fmt.euro(row.bill)}`, `€${row.amounts[key]} of ${fmt.euro(row.bill)}`);
                     return `${ctx.dataset.label}: ${fmt.pct(ctx.parsed.y)} (${amount})`;
                 },
-                title: year => `IMI de ${year}`
+                title: year => tr(`IMI de ${year}`, `IMI for ${year}`)
             }),
             plugins: [endLabels(v => fmt.pct(v))]
         });
@@ -898,7 +998,7 @@ class App {
     revenueChartConfig(series, real) {
         const imi = series.map(r => real ? r.imiReal : r.imi);
         const imt = series.map(r => real ? r.imtReal : r.imt);
-        const suffix = real ? `, a preços de ${this.targetYear}` : ', em euros da altura';
+        const suffix = real ? tr(`, a preços de ${this.targetYear}`, `, at ${this.targetYear} prices`) : tr(', em euros da altura', ', in euros of the time');
         return {
             type: 'line',
             data: {
@@ -911,7 +1011,7 @@ class App {
             options: chartOptions({
                 y: { min: 0, ticks: { callback: v => fmt.money(v) } },
                 tooltip: ctx => `${ctx.dataset.label}: ${fmt.money(ctx.parsed.y)}`,
-                title: year => `Receita de ${year}`
+                title: year => tr(`Receita de ${year}`, `Revenue in ${year}`)
             }),
             plugins: [endLabels(v => fmt.money(v))]
         };
@@ -931,9 +1031,9 @@ class App {
             <div class="stat"><span class="stat-label">IMT, ${first.year} → ${last.year}</span>
                 <span class="stat-value">${fmt.signedPct(change(first.imtReal, last.imtReal))}</span>
                 <span class="stat-note">real (${fmt.signedPct(change(first.imt, last.imt))} nominal)</span></div>
-            <div class="stat"><span class="stat-label">Receita de ${last.year}${real ? '' : ', euros da altura'}</span>
+            <div class="stat"><span class="stat-label">${tr(`Receita de ${last.year}`, `Revenue in ${last.year}`)}${real ? '' : tr(', euros da altura', ', euros of the time')}</span>
                 <span class="stat-value">${fmt.money(real ? last.imtReal : last.imt)} <small>IMT</small></span>
-                <span class="stat-note">${fmt.money(real ? last.imiReal : last.imi)} de IMI${overtook ? ` · o IMT passou o IMI em ${overtook.year}` : ''}</span></div>`;
+                <span class="stat-note">${fmt.money(real ? last.imiReal : last.imi)} ${tr('de IMI', 'of IMI')}${overtook ? tr(` · o IMT passou o IMI em ${overtook.year}`, ` · IMT overtook IMI in ${overtook.year}`) : ''}</span></div>`;
         this.replaceChart('revenue', el('revenueChart'), this.revenueChartConfig(series, real));
         for (const button of document.querySelectorAll('#revenueMode button')) {
             button.setAttribute('aria-pressed', String(button.dataset.mode === this.revenueMode));
@@ -1008,7 +1108,7 @@ class App {
             const change = metricChange(entity.series, this.metric, FIRST_YEAR, this.lastMunicipalYear);
             const last = entity.series.find(r => r.year === this.lastMunicipalYear);
             tip.innerHTML = html`<strong>${entity.name}</strong><br>
-                ${formatChange(this.metric, change)} desde ${FIRST_YEAR}<br>
+                ${formatChange(this.metric, change)} ${tr('desde', 'since')} ${FIRST_YEAR}<br>
                 <span class="muted">${this.lastMunicipalYear}: ${formatMetric(this.metric, last && last[this.metric])}</span>`;
             const box = svg.parentElement.getBoundingClientRect();
             tip.style.left = `${event.clientX - box.left + 12}px`;
@@ -1049,20 +1149,20 @@ class App {
     renderLegend() {
         const kind = METRICS[this.metric].change;
         const breaks = CLASS_BREAKS[kind];
-        const label = v => kind === 'points' ? `${v} p.p.` : `${Math.round(v * 100)}%`;
+        const label = v => kind === 'points' ? `${v} ${POINTS}` : `${Math.round(v * 100)}%`;
         const items = [];
         for (let c = -4; c <= 4; c++) {
             const lo = c === 0 ? null : breaks[Math.abs(c) - 1];
             const hi = c === 0 ? breaks[0] : breaks[Math.abs(c)];
             let text;
             if (c === 0) text = `± ${label(breaks[0])}`;
-            else if (hi === undefined) text = `${c < 0 ? '−' : '+'}${label(lo)} ou mais`;
-            else text = `${c < 0 ? '−' : '+'}${label(lo)} a ${c < 0 ? '−' : '+'}${label(hi)}`;
+            else if (hi === undefined) text = `${c < 0 ? '−' : '+'}${label(lo)} ${tr('ou mais', 'or more')}`;
+            else text = `${c < 0 ? '−' : '+'}${label(lo)} ${tr('a', 'to')} ${c < 0 ? '−' : '+'}${label(hi)}`;
             items.push(html`<li><span class="swatch" style="background:${CLASS_FILL[c]}"></span>${text}</li>`);
         }
-        el('mapLegend').innerHTML = html`<p class="legend-title">Variação ${FIRST_YEAR}–${this.lastMunicipalYear}</p>
+        el('mapLegend').innerHTML = html`<p class="legend-title">${tr('Variação', 'Change')} ${FIRST_YEAR}–${this.lastMunicipalYear}</p>
             <ul>${raw(items.join(''))}</ul>
-            <p class="legend-note"><span class="swatch swatch-empty"></span>sem dados</p>`;
+            <p class="legend-note"><span class="swatch swatch-empty"></span>${tr('sem dados', 'no data')}</p>`;
     }
 
     // Animate the SVG viewBox to a target box.
@@ -1128,8 +1228,8 @@ class App {
             this.zoomTo(this.map.viewBox);
         }
         el('mapHint').textContent = this.district
-            ? 'Clique num município para ver o detalhe, ou noutro distrito para mudar.'
-            : 'Clique num distrito para ver os seus municípios.';
+            ? tr('Clique num município para ver o detalhe, ou noutro distrito para mudar.', 'Click a municipality for its details, or another district to switch.')
+            : tr('Clique num distrito para ver os seus municípios.', 'Click a district to see its municipalities.');
         this.renderBreadcrumb();
         this.renderRanking();
         this.renderTable();
@@ -1161,23 +1261,25 @@ class App {
                 <h3>${m.name}</h3>
             </div>
             <div class="stat-row summary-stats">
-                <div class="stat"><span class="stat-label">IMI nas receitas correntes, ${this.lastMunicipalYear}</span>
+                <div class="stat"><span class="stat-label">${tr('IMI nas receitas correntes', 'IMI in current revenue')}, ${this.lastMunicipalYear}</span>
                     <span class="stat-value">${fmt.pct(last && last.share)}</span>
-                    <span class="stat-note">${fmt.pct(first && first.share)} em ${FIRST_YEAR}</span></div>
-                <div class="stat"><span class="stat-label">IMI por alojamento, ${this.lastMunicipalYear}</span>
+                    <span class="stat-note">${fmt.pct(first && first.share)} ${tr('em', 'in')} ${FIRST_YEAR}</span></div>
+                <div class="stat"><span class="stat-label">${tr('IMI por alojamento', 'IMI per dwelling')}, ${this.lastMunicipalYear}</span>
                     <span class="stat-value">${fmt.euro(last && last.nominal)}</span>
-                    <span class="stat-note">${fmt.int(last && last.dwellings)} alojamentos${last && last.estimate ? ' (estimativa) ⚠️' : ''}</span></div>
-                <div class="stat"><span class="stat-label">Variação real desde ${FIRST_YEAR}</span>
+                    <span class="stat-note">${fmt.int(last && last.dwellings)} ${tr('alojamentos', 'dwellings')}${last && last.estimate ? tr(' (estimativa) ⚠️', ' (estimate) ⚠️') : ''}</span></div>
+                <div class="stat"><span class="stat-label">${tr('Variação real desde', 'Real change since')} ${FIRST_YEAR}</span>
                     <span class="stat-value">${fmt.signedPct(metricChange(m.series, 'real', FIRST_YEAR, this.lastMunicipalYear))}</span>
                     <span class="stat-note">nominal: ${fmt.signedPct(metricChange(m.series, 'nominal', FIRST_YEAR, this.lastMunicipalYear))}</span></div>
-                <div class="stat"><span class="stat-label">Taxa de IMI ${lastRate ? lastRate.year : ''}</span>
+                <div class="stat"><span class="stat-label">${tr('Taxa de IMI', 'IMI rate')} ${lastRate ? lastRate.year : ''}</span>
                     <span class="stat-value">${fmt.rate(lastRate && lastRate.urban)}</span>
-                    <span class="stat-note">prédios urbanos</span></div>
+                    <span class="stat-note">${tr('prédios urbanos', 'urban properties')}</span></div>
                 <div class="stat"><span class="stat-label">IMI Familiar ${lastRate ? lastRate.year : ''}</span>
-                    <span class="stat-value">${lastRate && lastRate.familiar ? 'Sim' : 'Não'}</span>
-                    <span class="stat-note">${lastRate && lastRate.familiar ? `${familiarLabel(lastRate.familiar)} · ` : ''}${familiarYears.length} de ${familiarRange.length} anos desde ${this.familiarFirstYear}</span></div>
+                    <span class="stat-value">${lastRate && lastRate.familiar ? tr('Sim', 'Yes') : tr('Não', 'No')}</span>
+                    <span class="stat-note">${lastRate && lastRate.familiar ? `${familiarLabel(lastRate.familiar)} · ` : ''}${tr(
+                        `${familiarYears.length} de ${familiarRange.length} anos desde ${this.familiarFirstYear}`,
+                        `${familiarYears.length} of ${familiarRange.length} years since ${this.familiarFirstYear}`)}</span></div>
             </div>
-            <button type="button" class="summary-more link-button" data-scroll="detail">Gráficos de ${m.name} ↓</button>`;
+            <button type="button" class="summary-more link-button" data-scroll="detail">${tr(`Gráficos de ${m.name}`, `Charts for ${m.name}`)} ↓</button>`;
     }
 
     renderRanking() {
@@ -1192,7 +1294,7 @@ class App {
             <span class="rank-change">${formatChange(this.metric, e.change)}</span></a></li>`;
         const falls = list.filter(e => e.change < 0).slice(0, 3);
         const rises = list.filter(e => e.change > 0).slice(-3).reverse();
-        const items = entries => entries.length ? entries.map(item).join('') : html`<li class="rank-empty">Nenhum município.</li>`;
+        const items = entries => entries.length ? entries.map(item).join('') : html`<li class="rank-empty">${tr('Nenhum município.', 'No municipalities.')}</li>`;
         const scope = this.district ? this.district.name : 'Portugal';
         const scopeSeries = this.district ? this.district.series : this.country;
         const change = metricChange(scopeSeries, this.metric, FIRST_YEAR, this.lastMunicipalYear);
@@ -1200,14 +1302,14 @@ class App {
             <div class="scope-summary">
                 <span class="stat-label">${scope}: ${METRICS[this.metric].short}</span>
                 <span class="stat-value">${formatChange(this.metric, change)}</span>
-                <span class="stat-note">de ${FIRST_YEAR} a ${this.lastMunicipalYear}</span>
+                <span class="stat-note">${tr(`de ${FIRST_YEAR} a ${this.lastMunicipalYear}`, `from ${FIRST_YEAR} to ${this.lastMunicipalYear}`)}</span>
             </div>
             <div class="rank-block">
-                <h3>Maiores descidas</h3>
+                <h3>${tr('Maiores descidas', 'Biggest falls')}</h3>
                 <ol class="rank-list falls">${raw(items(falls))}</ol>
             </div>
             <div class="rank-block">
-                <h3>Maiores subidas</h3>
+                <h3>${tr('Maiores subidas', 'Biggest rises')}</h3>
                 <ol class="rank-list rises">${raw(items(rises))}</ol>
             </div>`;
     }
@@ -1228,18 +1330,24 @@ class App {
         const header = (key, text) => html`<th aria-sort="${sort.key === key ? (sort.dir > 0 ? 'ascending' : 'descending') : 'none'}">
             <button type="button" data-sort="${key}">${text}</button></th>`;
         el('municipalityTable').innerHTML = html`
-            <thead><tr>${raw(header('name', 'Município'))}${raw(header('first', String(FIRST_YEAR)))}
-                ${raw(header('last', String(this.lastMunicipalYear) + (this.metric !== 'share' && this.country.find(r => r.year === this.lastMunicipalYear).estimate ? ' ⚠️' : '')))}${raw(header('change', 'Variação'))}</tr></thead>
+            <thead><tr>${raw(header('name', tr('Município', 'Municipality')))}${raw(header('first', String(FIRST_YEAR)))}
+                ${raw(header('last', String(this.lastMunicipalYear) + (this.metric !== 'share' && this.country.find(r => r.year === this.lastMunicipalYear).estimate ? ' ⚠️' : '')))}${raw(header('change', tr('Variação', 'Change')))}</tr></thead>
             <tbody>${raw(rows.map(r => html`<tr>
                 <td><a href="#/${slugify(r.e.districtName)}/${r.e.slug}">${r.e.name}</a></td>
                 <td>${formatMetric(this.metric, r.first)}</td>
                 <td>${formatMetric(this.metric, r.last)}</td>
                 <td>${formatChange(this.metric, r.e.change)}</td></tr>`).join(''))}</tbody>`;
-        el('tableTitle').textContent = `${METRICS[this.metric].label}: ${this.district ? this.district.name : 'todos os municípios'}`;
+        el('tableTitle').textContent = `${METRICS[this.metric].label}: ${this.district ? this.district.name : tr('todos os municípios', 'all municipalities')}`;
         const missing = this.scopeEntities().length - rows.length;
         const notes = [];
-        if (this.metric !== 'share') notes.push(`⚠️ O número de alojamentos de ${this.lastMunicipalYear} é uma estimativa (ver Metodologia).`);
-        if (missing) notes.push(`${missing} município(s) sem dados num dos anos de comparação não aparecem na tabela.`);
+        if (this.metric !== 'share') {
+            notes.push(tr(`⚠️ O número de alojamentos de ${this.lastMunicipalYear} é uma estimativa (ver Metodologia).`,
+                `⚠️ The number of dwellings for ${this.lastMunicipalYear} is an estimate (see Methodology).`));
+        }
+        if (missing) {
+            notes.push(tr(`${missing} município(s) sem dados num dos anos de comparação não aparecem na tabela.`,
+                `${missing} ${missing === 1 ? 'municipality' : 'municipalities'} without data in one of the years compared ${missing === 1 ? 'is' : 'are'} left out of the table.`));
+        }
         el('tableNote').textContent = notes.join(' ');
     }
 
@@ -1260,21 +1368,22 @@ class App {
         const rates = rateSeries(this.rates, m.code);
         el('detailTitle').textContent = m.name;
         el('detailSubtitle').textContent = district.name;
+        const atPrices = tr(`, a preços de ${this.targetYear}`, `, at ${this.targetYear} prices`);
         this.replaceChart('perDwelling', el('perDwellingChart'), {
             type: 'line',
             data: {
                 labels,
                 datasets: [
-                    lineDataset(`${m.name}, a preços de ${this.targetYear}`, pick(m.series, 'real'), COLORS.real, { width: 2.5 }),
-                    lineDataset(`${m.name}, em euros da altura`, pick(m.series, 'nominal'), COLORS.nominal),
-                    lineDataset(`${district.name}, a preços de ${this.targetYear}`, pick(district.series, 'real'), COLORS.district),
-                    lineDataset(`Portugal, a preços de ${this.targetYear}`, pick(this.country, 'real'), COLORS.national)
+                    lineDataset(`${m.name}${atPrices}`, pick(m.series, 'real'), COLORS.real, { width: 2.5 }),
+                    lineDataset(`${m.name}${tr(', em euros da altura', ', in euros of the time')}`, pick(m.series, 'nominal'), COLORS.nominal),
+                    lineDataset(`${district.name}${atPrices}`, pick(district.series, 'real'), COLORS.district),
+                    lineDataset(`Portugal${atPrices}`, pick(this.country, 'real'), COLORS.national)
                 ]
             },
             options: chartOptions({
                 y: { ticks: { callback: v => fmt.euro(v) } },
                 tooltip: ctx => `${ctx.dataset.label}: ${fmt.euro2(ctx.parsed.y)}`,
-                title: year => `IMI de ${year} (pago em ${paymentYear(Number(year))})`
+                title: imiYearTitle
             }),
             plugins: [endLabels(v => fmt.euro(v))]
         });
@@ -1295,7 +1404,7 @@ class App {
             options: chartOptions({
                 y: { min: 0, ticks: { callback: v => fmt.pct(v) } },
                 tooltip: ctx => `${ctx.dataset.label}: ${fmt.pct(ctx.parsed.y)}`,
-                title: year => `${year} (contas de ${paymentYear(Number(year))})`
+                title: year => tr(`${year} (contas de ${paymentYear(Number(year))})`, `${year} (${paymentYear(Number(year))} accounts)`)
             }),
             plugins: [endLabels(v => fmt.pct(v))]
         });
@@ -1304,24 +1413,25 @@ class App {
             type: 'line',
             data: {
                 labels: rates.map(r => String(r.year)),
-                datasets: [lineDataset('Taxa de IMI (prédios urbanos)', rates.map(r => r.urban), COLORS.real, { width: 2.5, stepped: true })]
+                datasets: [lineDataset(tr('Taxa de IMI (prédios urbanos)', 'IMI rate (urban properties)'), rates.map(r => r.urban), COLORS.real, { width: 2.5, stepped: true })]
             },
             options: chartOptions({
                 legend: false,
                 y: { suggestedMin: 0.003, suggestedMax: 0.0045, ticks: { callback: v => fmt.rate(v) } },
-                tooltip: ctx => `Taxa: ${fmt.rate(ctx.parsed.y)}`,
-                title: year => `Taxa para o IMI de ${year}`
+                tooltip: ctx => `${tr('Taxa', 'Rate')}: ${fmt.rate(ctx.parsed.y)}`,
+                title: year => tr(`Taxa para o IMI de ${year}`, `Rate for the IMI for ${year}`)
             })
         });
 
         const withFreguesias = rates.filter(r => r.freguesias.length);
         el('familiarStrip').innerHTML = rates.filter(r => r.year >= this.familiarFirstYear).map(r => html`
             <li class="familiar-year${r.familiar ? ' on' : ''}"><span class="familiar-y">${r.year}</span>
-                <span class="familiar-v">${r.familiar ? familiarLabel(r.familiar) : 'não'}</span></li>`).join('');
+                <span class="familiar-v">${r.familiar ? familiarLabel(r.familiar) : tr('não', 'no')}</span></li>`).join('');
         el('freguesiaRates').innerHTML = withFreguesias.length ? html`
-            <p class="chart-note">Em alguns anos, ${m.name} fixou taxas por freguesia (art. 112.º, n.º 6 do CIMI). Nesses
-            anos, o gráfico mostra a taxa da maioria das freguesias.</p>
-            <details><summary>Taxas por freguesia</summary>
+            <p class="chart-note">${tr(
+                `Em alguns anos, ${m.name} fixou taxas por freguesia (art. 112.º, n.º 6 do CIMI). Nesses anos, o gráfico mostra a taxa da maioria das freguesias.`,
+                `In some years, ${m.name} set rates per freguesia (parish; art. 112(6) of the CIMI). In those years, the chart shows the rate most freguesias paid.`)}</p>
+            <details><summary>${tr('Taxas por freguesia', 'Rates per freguesia')}</summary>
             ${raw(withFreguesias.map(r => html`<p><strong>${r.year}:</strong> ${r.freguesias.map(f => `${titleCase(f.name)} ${fmt.rate(f.urban)}`).join(' · ')}</p>`).join(''))}
             </details>` : '';
     }
@@ -1367,7 +1477,7 @@ class App {
             const m = this.municipalities.find(x => `${x.name} (${x.districtName})` === search.value);
             if (m) { this.go(m); search.value = ''; }
         });
-        el('smallThreshold').textContent = fmt.int(SMALL_MUNICIPALITY);
+        for (const node of document.querySelectorAll('[data-small-threshold]')) node.textContent = fmt.int(SMALL_MUNICIPALITY);
         for (const node of document.querySelectorAll('[data-first-year]')) node.textContent = FIRST_YEAR;
         for (const node of document.querySelectorAll('[data-last-municipal-year]')) node.textContent = this.lastMunicipalYear;
         for (const node of document.querySelectorAll('[data-target-year]')) node.textContent = this.targetYear;
@@ -1377,7 +1487,7 @@ class App {
         const attrs = 'target="_blank" rel="noopener noreferrer"';
         const yearChip = (label, url, backup, title) => html`<li class="year-chip">
             <a href="${url}" ${raw(attrs)} title="${title}">${label}</a>${raw(backup
-                ? html`<a class="chip-archive" href="${backup}" ${raw(attrs)} title="Cópia em web.archive.org" aria-label="Cópia de ${label} no arquivo">↺</a>`
+                ? html`<a class="chip-archive" href="${backup}" ${raw(attrs)} title="${tr('Cópia em web.archive.org', 'Copy on web.archive.org')}" aria-label="${tr(`Cópia de ${label} no arquivo`, `Archived copy of ${label}`)}">↺</a>`
                 : '')}</li>`;
         const card = ({ title, publisher, text, url, linkText, years, archived, links = [] }) => html`<article class="source-card">
             <header>
@@ -1386,112 +1496,127 @@ class App {
             </header>
             <p>${text}</p>
             ${raw(years ? html`<ul class="year-chips">${raw(years.join(''))}</ul>
-                <p class="chip-key">Um ficheiro por ano do imposto${archived ? ' · ↺ cópia em web.archive.org' : ''}</p>` : '')}
+                <p class="chip-key">${tr('Um ficheiro por ano do imposto', 'One file per tax year')}${archived ? tr(' · ↺ cópia em web.archive.org', ' · ↺ copy on web.archive.org') : ''}</p>` : '')}
             <a class="source-link" href="${url}" ${raw(attrs)}>${linkText} ↗</a>
             ${raw(links.filter(l => l.url).map(l => html`<a class="source-extra" href="${l.url}" ${raw(attrs)}>${l.text}</a>`).join(''))}
         </article>`;
 
         const revenue = this.municipalData.sources.revenue;
         const dwellings = this.municipalData.sources.dwellings;
-        const updated = dwellings.updated ? ` Atualizado pelo INE em ${dwellings.updated.split('-').reverse().join('/')}.` : '';
+        const updatedOn = dwellings.updated && dwellings.updated.split('-').reverse().join('/');
+        const updated = updatedOn ? tr(` Atualizado pelo INE em ${updatedOn}.`, ` Updated by INE on ${updatedOn}.`) : '';
+        const at = tr('Autoridade Tributária', 'Tax Authority (AT)');
+        const vcYears = this.components.constructionValue.years;
+        const zoning = this.components.location.revisions[this.components.location.revisions.length - 1];
         const cards = [
             {
-                title: 'IMI nacional',
-                publisher: 'Autoridade Tributária',
-                text: 'Coleta de IMI dos prédios urbanos e número de prédios urbanos tributados, por ano do imposto.',
+                title: tr('IMI nacional', 'National IMI'),
+                publisher: at,
+                text: tr('Coleta de IMI dos prédios urbanos e número de prédios urbanos tributados, por ano do imposto.',
+                    'IMI collected on urban properties and number of taxed urban properties, by tax year.'),
                 url: this.nationalData.source.url,
                 linkText: 'Estatísticas do Património',
-                years: this.nationalRows.map(r => yearChip(r.year, r.source.url, r.source.backup, `IMI de ${r.year}`)),
+                years: this.nationalRows.map(r => yearChip(r.year, r.source.url, r.source.backup, tr(`IMI de ${r.year}`, `IMI for ${r.year}`))),
                 archived: this.nationalRows.some(r => r.source.backup)
             },
             {
-                title: 'Receita dos municípios',
+                title: tr('Receita dos municípios', 'Municipal revenue'),
                 publisher: 'DGAL',
-                text: 'IMI e receitas correntes de cada município (receita cobrada líquida), das contas de gerência. Cada ano do imposto vem das contas do ano seguinte.',
+                text: tr('IMI e receitas correntes de cada município (receita cobrada líquida), das contas de gerência. Cada ano do imposto vem das contas do ano seguinte.',
+                    "Each municipality's IMI and current revenue (net revenue collected), from its annual accounts. Each tax year comes from the following year's accounts."),
                 url: revenue.url,
                 linkText: 'Contas de Gerência dos Municípios',
                 years: Object.entries(revenue.files).map(([year, url]) =>
-                    yearChip(year, url, null, `IMI de ${year}, contas de ${Number(year) + 1}`))
+                    yearChip(year, url, null, tr(`IMI de ${year}, contas de ${Number(year) + 1}`, `IMI for ${year}, ${Number(year) + 1} accounts`)))
             },
             {
-                title: 'Alojamentos',
+                title: tr('Alojamentos', 'Dwellings'),
                 publisher: 'INE',
-                text: `Alojamentos familiares clássicos por município (estimativas do parque habitacional, indicador 0008329).${updated}`,
+                text: tr(`Alojamentos familiares clássicos por município (estimativas do parque habitacional, indicador 0008329).${updated}`,
+                    `Classic family dwellings per municipality (housing stock estimates, indicator 0008329).${updated}`),
                 url: dwellings.url,
-                linkText: 'Base de dados do INE'
+                linkText: tr('Base de dados do INE', 'INE database')
             },
             {
-                title: 'Taxas de IMI',
-                publisher: 'Autoridade Tributária',
-                text: 'Taxa dos prédios urbanos fixada por cada município para cada ano, taxas por freguesia onde existem, e o IMI Familiar que cada município aplica.',
+                title: tr('Taxas de IMI', 'IMI rates'),
+                publisher: at,
+                text: tr('Taxa dos prédios urbanos fixada por cada município para cada ano, taxas por freguesia onde existem, e o IMI Familiar que cada município aplica.',
+                    'The urban property rate each municipality set for each year, rates per freguesia where they exist, and the IMI Familiar each municipality applies.'),
                 url: this.rates.source.url,
-                linkText: 'Consultar taxas por município'
+                linkText: tr('Consultar taxas por município', 'Rates by municipality')
             },
             {
-                title: 'VPT urbano',
-                publisher: 'Autoridade Tributária',
-                text: 'VPT dos prédios urbanos tributados e isentos (quadros B e C das mesmas estatísticas do IMI nacional).',
+                title: tr('VPT urbano', 'Urban VPT'),
+                publisher: at,
+                text: tr('VPT dos prédios urbanos tributados e isentos (quadros B e C das mesmas estatísticas do IMI nacional).',
+                    'VPT of taxed and exempt urban properties (tables B and C of the same statistics as the national IMI).'),
                 url: this.nationalData.source.url,
                 linkText: 'Estatísticas do Património'
             },
             {
-                title: 'Valor base de construção',
+                title: tr('Valor base de construção', 'Base construction value'),
                 publisher: 'Diário da República',
-                text: `Valor médio de construção por m² fixado por portaria para cada ano (art. 39.º do CIMI), de ${this.components.constructionValue.years[0].portaria} a ${this.components.constructionValue.years[this.components.constructionValue.years.length - 1].portaria}.`,
+                text: tr(`Valor médio de construção por m² fixado por portaria para cada ano (art. 39.º do CIMI), de ${vcYears[0].portaria} a ${vcYears[vcYears.length - 1].portaria}.`,
+                    `Average construction value per m² set by portaria for each year (art. 39 of the CIMI), from ${vcYears[0].portaria} to ${vcYears[vcYears.length - 1].portaria}.`),
                 url: this.components.constructionValue.url,
-                linkText: 'Tabela de valores e portarias',
-                links: [{ text: '↺ cópia no arquivo', url: this.components.constructionValue.backup }]
+                linkText: tr('Tabela de valores e portarias', 'Table of values and portarias'),
+                links: [{ text: tr('↺ cópia no arquivo', '↺ archived copy'), url: this.components.constructionValue.backup }]
             },
             {
-                title: 'Atualização trienal',
+                title: tr('Atualização trienal', 'Triennial update'),
                 publisher: 'Diário da República',
-                text: 'Coeficientes de desvalorização da moeda (art. 138.º do CIMI), uma portaria por atualização.',
+                text: tr('Coeficientes de desvalorização da moeda (art. 138.º do CIMI), uma portaria por atualização.',
+                    'Currency devaluation coefficients (art. 138 of the CIMI), one portaria per update.'),
                 url: this.components.triennialUpdates.url,
-                linkText: 'Art. 138.º do CIMI',
-                links: [{ text: '↺ cópia do art. 138.º no arquivo', url: this.components.triennialUpdates.backup }],
+                linkText: tr('Art. 138.º do CIMI', 'Art. 138 of the CIMI'),
+                links: [{ text: tr('↺ cópia do art. 138.º no arquivo', '↺ archived copy of art. 138'), url: this.components.triennialUpdates.backup }],
                 years: this.components.triennialUpdates.updates.map(u =>
-                    yearChip(u.year, u.url, u.backup, `Portaria ${u.portaria}: coeficiente de ${u.cdmYear}`)),
+                    yearChip(u.year, u.url, u.backup, tr(`Portaria ${u.portaria}: coeficiente de ${u.cdmYear}`, `Portaria ${u.portaria}: coefficient for ${u.cdmYear}`))),
                 archived: this.components.triennialUpdates.updates.some(u => u.backup)
             },
             {
-                title: 'Custos de construção e preços da habitação',
+                title: tr('Custos de construção e preços da habitação', 'Construction costs and house prices'),
                 publisher: 'INE',
-                text: 'Índice de custo de construção de habitação nova (indicador 0011748) e índice de preços da habitação (indicador 0014765), médias anuais.',
+                text: tr('Índice de custo de construção de habitação nova (indicador 0011748) e índice de preços da habitação (indicador 0014765), médias anuais.',
+                    'Construction cost index for new housing (indicator 0011748) and house price index (indicator 0014765), yearly averages.'),
                 url: this.indices.housePrices.url,
-                linkText: 'Índice de preços da habitação',
+                linkText: tr('Índice de preços da habitação', 'House price index'),
                 links: [
-                    { text: 'Índice de custo de construção ↗', url: this.indices.constructionCosts.url },
-                    { text: '↺ cópia dos dados de custos de construção', url: this.indices.constructionCosts.backup },
-                    { text: '↺ cópia dos dados de preços da habitação', url: this.indices.housePrices.backup }
+                    { text: tr('Índice de custo de construção ↗', 'Construction cost index ↗'), url: this.indices.constructionCosts.url },
+                    { text: tr('↺ cópia dos dados de custos de construção', '↺ archived construction cost data'), url: this.indices.constructionCosts.backup },
+                    { text: tr('↺ cópia dos dados de preços da habitação', '↺ archived house price data'), url: this.indices.housePrices.backup }
                 ]
             },
             {
-                title: 'Vetustez e localização',
-                publisher: 'Código do IMI',
-                text: `Tabela do coeficiente de vetustez (art. 44.º), revisão trienal do zonamento (art. 62.º) e o zonamento em vigor (Portaria ${this.components.location.revisions[this.components.location.revisions.length - 1].portaria}).`,
+                title: tr('Vetustez e localização', 'Age and location'),
+                publisher: tr('Código do IMI', 'IMI Code (CIMI)'),
+                text: tr(`Tabela do coeficiente de vetustez (art. 44.º), revisão trienal do zonamento (art. 62.º) e o zonamento em vigor (Portaria ${zoning.portaria}).`,
+                    `Table of the age coefficient (art. 44), triennial revision of the zoning (art. 62) and the zoning in force (Portaria ${zoning.portaria}).`),
                 url: this.components.ageing.url,
-                linkText: 'Art. 44.º do CIMI',
+                linkText: tr('Art. 44.º do CIMI', 'Art. 44 of the CIMI'),
                 links: [
-                    { text: '↺ cópia do art. 44.º', url: this.components.ageing.backup },
-                    { text: 'Art. 62.º do CIMI ↗', url: this.components.location.url },
-                    { text: '↺ cópia do art. 62.º', url: this.components.location.backup },
+                    { text: tr('↺ cópia do art. 44.º', '↺ archived copy of art. 44'), url: this.components.ageing.backup },
+                    { text: tr('Art. 62.º do CIMI ↗', 'Art. 62 of the CIMI ↗'), url: this.components.location.url },
+                    { text: tr('↺ cópia do art. 62.º', '↺ archived copy of art. 62'), url: this.components.location.backup },
                     ...this.components.location.revisions.flatMap(r => [
                         { text: `Portaria ${r.portaria} ↗`, url: r.url },
-                        { text: `↺ cópia da Portaria ${r.portaria}`, url: r.backup }
+                        { text: tr(`↺ cópia da Portaria ${r.portaria}`, `↺ archived copy of Portaria ${r.portaria}`), url: r.backup }
                     ])
                 ]
             },
             {
-                title: 'Inflação',
+                title: tr('Inflação', 'Inflation'),
                 publisher: 'Eurostat',
-                text: 'IHPC da área do euro, variação de dezembro a dezembro (estimativa rápida de dezembro de cada ano). A mesma série da comparação de taxas de IRS.',
+                text: tr('IHPC da área do euro, variação de dezembro a dezembro (estimativa rápida de dezembro de cada ano). A mesma série da comparação de taxas de IRS.',
+                    "Euro-area HICP, December-on-December change (each year's December flash estimate). The same series as the IRS rates comparison."),
                 url: 'https://ec.europa.eu/eurostat/web/hicp',
-                linkText: 'IHPC no Eurostat'
+                linkText: tr('IHPC no Eurostat', 'HICP at Eurostat')
             },
             {
-                title: 'Mapa',
+                title: tr('Mapa', 'Map'),
                 publisher: 'Direção-Geral do Território',
-                text: 'Limites de distritos e municípios da Carta Administrativa Oficial de Portugal (CAOP 2025), simplificados para a web.',
+                text: tr('Limites de distritos e municípios da Carta Administrativa Oficial de Portugal (CAOP 2025), simplificados para a web.',
+                    "District and municipality boundaries from Portugal's Official Administrative Map (CAOP 2025), simplified for the web."),
                 url: this.map.source.url,
                 linkText: 'CAOP'
             }
@@ -1610,6 +1735,7 @@ const yearMarkers = {
 
 if (typeof document !== 'undefined' && typeof Chart !== 'undefined') {
     document.addEventListener('DOMContentLoaded', () => {
+        translatePage();
         new App().init().catch(err => {
             console.error(err);
             el('loadError').hidden = false;

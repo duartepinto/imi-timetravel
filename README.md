@@ -17,6 +17,8 @@ A sister project of `tabelas-irs-timetravel`, built the same way: a static site 
 
 Every view can be linked to: `#/porto/gondomar`.
 
+The site is in Portuguese and English. Visitors whose browser language is Portuguese, or whose time zone is in a Portuguese-speaking country, get Portuguese; everyone else gets English. The PT/EN switch in the header changes it (and is remembered), and `?lang=pt` or `?lang=en` forces one.
+
 ## Running it
 
 ```bash
